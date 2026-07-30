@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>宝宝喂养追踪</title>
+<style>
+:root{
+  --bg:#F9F8F6;
+  --card:#FFFFFF;
+  --primary:#8AAA94;
+  --primary-lt:#EEF4EF;
+  --primary-dk:#5C7D68;
+  --success:#8AAA94;
+  --success-lt:#EEF4EF;
+  --warn:#D4A96A;
+  --warn-lt:#FDF5E8;
+  --warn-dk:#A67C3D;
+  --danger:#C4877A;
+  --danger-lt:#FDF0EE;
+  --danger-dk:#9C5F54;
+  --info:#8AADB8;
+  --info-lt:#EEF4F6;
+  --txt:#3C3A37;
+  --txt2:#8E8C88;
+  --txt3:#B5B3AE;
+  --border:#EBE8E2;
+  --divider:#F0EDE8;
+  --radius:14px;
+  --radius-sm:10px;
+  --radius-xs:6px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  background:var(--bg);color:var(--txt);line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  display:flex;justify-content:center;min-height:100vh;
+}
+.app{width:100%;max-width:430px;min-height:100vh;display:flex;flex-direction:column;background:var(--bg);position:relative}
+.header{padding:20px 20px 12px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg);z-index:10}
+.header-left h1{font-size:20px;font-weight:600;color:var(--txt);letter-spacing:-0.3px}
+.header-left .stage{font-size:12px;color:var(--txt2);margin-top:1px}
+.header-right .date{font-size:13px;color:var(--txt2);background:var(--card);padding:6px 12px;border-radius:20px;border:0.5px solid var(--border)}
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:0 20px 18px}
+.summary-card{background:var(--card);border-radius:var(--radius-sm);padding:12px 8px;text-align:center;border:0.5px solid var(--border);transition:all 0.2s}
+.summary-card .val{font-size:22px;font-weight:600;letter-spacing:-0.5px}
+.summary-card .lbl{font-size:11px;color:var(--txt2);margin-top:3px}
+.summary-card.s-ok .val{color:var(--primary-dk)}
+.summary-card.s-warn .val{color:var(--warn-dk)}
+.summary-card.s-bad .val{color:var(--danger-dk)}
+.main{flex:1;padding:0 20px 84px;overflow-y:auto}
+.section{background:var(--card);border-radius:var(--radius);margin-bottom:10px;border:0.5px solid var(--border);overflow:hidden}
+.section-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer;user-select:none;transition:background 0.15s}
+.section-head:active{background:var(--bg)}
+.section-head .title{font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px}
+.section-head .title .icon{font-size:16px}
+.section-head .arrow{font-size:11px;color:var(--txt3);transition:transform 0.2s}
+.section-head.open .arrow{transform:rotate(180deg)}
+.section-body{display:none;padding:0 16px 14px}
+.section-body.open{display:block}
+.status-tag{font-size:11px;padding:2px 10px;border-radius:10px;font-weight:500}
+.status-tag.done{background:var(--success-lt);color:var(--primary-dk)}
+.status-tag.partial{background:var(--warn-lt);color:var(--warn-dk)}
+.status-tag.miss{background:var(--danger-lt);color:var(--danger-dk)}
+.meal-tabs{display:flex;gap:4px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch}
+.meal-tabs::-webkit-scrollbar{display:none}
+.meal-tab{padding:7px 14px;border-radius:16px;font-size:12px;white-space:nowrap;cursor:pointer;border:0.5px solid var(--border);background:var(--card);color:var(--txt2);transition:all 0.15s;flex-shrink:0}
+.meal-tab.active{background:var(--primary-lt);border-color:var(--primary);color:var(--primary-dk)}
+.meal-tab .dot{display:inline-block;width:5px;height:5px;border-radius:50%;margin-left:4px;vertical-align:middle}
+.meal-tab .dot.ok{background:var(--success)}
+.meal-tab .dot.none{background:var(--txt3)}
+.check-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:0.5px solid var(--divider)}
+.check-row:last-child{border-bottom:none}
+.check-row label{flex:1;font-size:13px;cursor:pointer;color:var(--txt)}
+.check-row input[type=checkbox]{width:18px;height:18px;accent-color:var(--primary);cursor:pointer;flex-shrink:0}
+.amt-group{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.amt-btn{width:28px;height:28px;border:0.5px solid var(--border);border-radius:var(--radius-xs);background:var(--card);font-size:14px;cursor:pointer;color:var(--txt2);display:flex;align-items:center;justify-content:center;transition:all 0.1s;user-select:none}
+.amt-btn:active{background:var(--primary-lt);color:var(--primary-dk)}
+.amt-val{min-width:32px;text-align:center;font-size:14px;font-weight:500;color:var(--txt)}
+.amt-unit{font-size:10px;color:var(--txt3);min-width:16px}
+.ref-tag{font-size:10px;padding:2px 7px;border-radius:8px;background:var(--bg);color:var(--txt3);white-space:nowrap;flex-shrink:0}
+.progress-row{margin-top:8px;display:flex;align-items:center;gap:8px;font-size:11px;color:var(--txt2)}
+.progress-bar{flex:1;height:5px;border-radius:3px;background:var(--border);overflow:hidden}
+.progress-fill{height:100%;border-radius:3px;transition:width 0.4s ease}
+.progress-fill.good{background:var(--success)}
+.progress-fill.warn{background:var(--warn)}
+.progress-fill.bad{background:var(--danger)}
+.sleep-summary{margin-top:10px;padding:10px 12px;background:var(--bg);border-radius:var(--radius-xs);font-size:12px;color:var(--txt2);display:flex;align-items:center;gap:8px}
+.sleep-summary .sleep-total{font-weight:600;font-size:15px;color:var(--primary-dk)}
+
+/* Water entries */
+.water-entries{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.water-chip{padding:6px 12px;border-radius:16px;font-size:12px;cursor:pointer;border:0.5px solid var(--border);background:var(--card);color:var(--txt2);transition:all 0.15s;display:flex;align-items:center;gap:4px}
+.water-chip:active{transform:scale(0.96)}
+.water-chip.active{background:var(--info-lt);border-color:var(--info);color:#5C7D80}
+.water-chip.recording{background:var(--primary-lt);border-color:var(--primary);color:var(--primary-dk)}
+.water-detail{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--divider)}
+.water-detail .time-label{font-size:12px;color:var(--txt2);min-width:48px}
+.water-total{padding:10px 12px;background:var(--bg);border-radius:var(--radius-xs);margin-top:8px;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--txt2)}
+.water-total .total-val{font-weight:600;font-size:15px;color:var(--primary-dk)}
+
+/* Outdoor sessions */
+.outdoor-sessions{display:flex;flex-direction:column;gap:6px}
+.outdoor-session{background:var(--bg);border-radius:var(--radius-xs);padding:10px 12px;display:flex;align-items:center;gap:8px}
+.outdoor-session .session-label{font-size:12px;color:var(--txt2);min-width:36px}
+.outdoor-summary{padding:10px 12px;margin-top:6px;background:var(--bg);border-radius:var(--radius-xs);display:flex;align-items:center;gap:8px;font-size:12px;color:var(--txt2)}
+.outdoor-summary .total-val{font-weight:600;font-size:15px;color:var(--primary-dk)}
+
+/* Play grid */
+.play-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:4px}
+.play-chip{display:flex;align-items:center;gap:6px;padding:9px 10px;border-radius:var(--radius-xs);border:0.5px solid var(--border);cursor:pointer;font-size:12px;color:var(--txt2);transition:all 0.15s;background:var(--card)}
+.play-chip:active{transform:scale(0.97)}
+.play-chip.checked{background:var(--primary-lt);border-color:var(--primary);color:var(--primary-dk)}
+.play-chip .play-emoji{font-size:15px;line-height:1}
+.play-summary{margin-top:10px;font-size:12px;color:var(--txt2);padding:8px 12px;background:var(--bg);border-radius:var(--radius-xs)}
+
+/* Supplement */
+.sup-card{padding:12px;border-radius:var(--radius-xs);margin-bottom:8px;border:0.5px solid var(--border)}
+.sup-card .sup-label{font-size:13px;font-weight:500;margin-bottom:3px}
+.sup-card .sup-detail{font-size:11px;color:var(--txt2)}
+.sup-note{margin-top:8px;padding:10px 12px;background:var(--info-lt);border-radius:var(--radius-xs);font-size:11px;color:#5C7D80;line-height:1.7}
+.sup-note strong{font-weight:500}
+
+/* Analysis */
+.analysis-header{font-size:13px;color:var(--txt2);margin-bottom:12px}
+.analysis-card{background:var(--card);border-radius:var(--radius-sm);padding:14px;margin-bottom:8px;border:0.5px solid var(--border);display:flex;align-items:center;gap:10px}
+.analysis-icon{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.analysis-icon.ok{background:var(--success-lt);color:var(--primary-dk)}
+.analysis-icon.warn{background:var(--warn-lt);color:var(--warn-dk)}
+.analysis-icon.bad{background:var(--danger-lt);color:var(--danger-dk)}
+.analysis-info{flex:1;min-width:0}
+.analysis-info .name{font-size:13px;font-weight:500}
+.analysis-info .detail{font-size:11px;color:var(--txt2);margin-top:1px}
+.analysis-score{font-size:16px;font-weight:600;text-align:right}
+.analysis-score.ok{color:var(--primary-dk)}
+.analysis-score.warn{color:var(--warn-dk)}
+.analysis-score.bad{color:var(--danger-dk)}
+.alert-item{display:flex;align-items:flex-start;gap:10px;padding:13px 14px;border-radius:var(--radius-sm);margin-bottom:7px;font-size:12px;line-height:1.6}
+.alert-item strong{font-weight:500}
+.alert-item .dot{width:7px;height:7px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.alert-item.danger{background:var(--danger-lt);color:var(--danger-dk)}
+.alert-item.danger .dot{background:var(--danger)}
+.alert-item.warning{background:var(--warn-lt);color:var(--warn-dk)}
+.alert-item.warning .dot{background:var(--warn)}
+.alert-item.info{background:var(--info-lt);color:#5C7D80}
+.alert-item.info .dot{background:var(--info)}
+.empty-state{text-align:center;padding:40px 20px;color:var(--txt3);font-size:13px}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;display:flex;background:var(--card);border-top:0.5px solid var(--border);padding:6px 0 env(safe-area-inset-bottom,8px);z-index:20}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;cursor:pointer;background:none;border:none;font-size:10px;color:var(--txt3);transition:color 0.15s;position:relative}
+.nav-item.active{color:var(--primary-dk)}
+.nav-item .nav-icon{font-size:20px;line-height:1}
+.nav-item .nav-badge{position:absolute;top:2px;right:calc(50% - 22px);width:7px;height:7px;border-radius:50%;background:var(--danger)}
+.panel{display:none}
+.panel.active{display:block}
+.fade{animation:fadeIn 0.2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="header">
+  <div class="header-left"><h1>宝宝喂养追踪</h1><div class="stage">12~15月 · 周岁起步期</div></div>
+  <div class="date" id="dateDisplay"></div>
+</div>
+
+<div class="summary" id="summaryCards"></div>
+<div class="main" id="mainContent"></div>
+
+<div class="bottom-nav">
+  <button class="nav-item active" data-panel="checkin" onclick="switchPanel('checkin')"><span class="nav-icon">&#9678;</span>打卡</button>
+  <button class="nav-item" data-panel="analysis" onclick="switchPanel('analysis')"><span class="nav-icon">&#9776;</span>分析</button>
+  <button class="nav-item" data-panel="alerts" onclick="switchPanel('alerts')"><span class="nav-icon">&#9888;</span>提醒<span class="nav-badge" id="alertBadge" style="display:none"></span></button>
+</div>
+
+</div>
+
+<script>
+const REF={milk:{lo:400,hi:600,unit:'ml'},grains:{lo:80,hi:120,unit:'g'},veg:{lo:80,hi:120,unit:'g'},fruit:{lo:50,hi:100,unit:'g'},protein:{lo:50,hi:75,unit:'g'},egg:{lo:0.5,hi:1,unit:'个'},water:{lo:200,hi:300,unit:'ml'},outdoor:{lo:60,hi:120,unit:'分钟'},sleep:{lo:11,hi:14,unit:'小时'}};
+
+const PLAY_OPTIONS=[
+  {id:'reading',emoji:'📖',label:'绘本阅读'},
+  {id:'blocks',emoji:'🧱',label:'积木搭建'},
+  {id:'singing',emoji:'🎵',label:'唱歌跳舞'},
+  {id:'fingers',emoji:'👋',label:'手指游戏'},
+  {id:'hideSeek',emoji:'🙈',label:'捉迷藏'},
+  {id:'ball',emoji:'⚽',label:'球类游戏'},
+  {id:'drawing',emoji:'🎨',label:'涂鸦画画'},
+  {id:'nature',emoji:'🌿',label:'自然探索'}
+];
+
+function today(){return new Date().toISOString().slice(0,10)}
+const STORAGE_KEY='baby-tracker-v2';
+
+function defaultData(){
+  return {
+    date:today(),
+    meals:{
+      breakfast:{milk:{ck:true,amt:150},egg:{ck:true,amt:1},bread:{ck:true,amt:40},porridge:{ck:false,amt:0}},
+      snack1:{fruit:{ck:false,amt:0},yogurt:{ck:false,amt:0}},
+      lunch:{rice:{ck:true,amt:60},meat:{ck:true,amt:30},veg:{ck:true,amt:40}},
+      snack2:{fruit:{ck:false,amt:0},milk:{ck:true,amt:120}},
+      dinner:{rice:{ck:true,amt:50},fish:{ck:false,amt:0},veg:{ck:true,amt:30}},
+      bedtime:{milk:{ck:true,amt:180}}
+    },
+    activity:{
+      outdoor:[{ck:true,amt:45,label:'上午'},{ck:false,amt:0,label:'下午'}],
+      walk:{ck:true,amt:20},
+      play:{reading:{ck:false},blocks:{ck:true},singing:{ck:false},fingers:{ck:false},hideSeek:{ck:false},ball:{ck:false},drawing:{ck:false},nature:{ck:false}}
+    },
+    sleep:{night:{ck:true,amt:10},nap1:{ck:true,amt:1},nap2:{ck:false,amt:0.5}},
+    supplement:{ad:{ck:true},dha:{ck:false}},
+    water:[{ck:true,amt:50,label:'早起'},{ck:false,amt:0,label:'户外后'},{ck:true,amt:30,label:'午睡后'},{ck:false,amt:0,label:'晚饭后'},{ck:false,amt:0,label:'睡前'}]
+  };
+}
+
+let state=defaultData();
+
+function loadData(){
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
+    if(raw){const parsed=JSON.parse(raw);if(parsed.date===today())state=parsed;else{state=defaultData();saveData()}}
+  }catch(e){state=defaultData()}
+}
+function saveData(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state))}
+
+function updateObjVal(obj,delta){
+  obj.amt=Math.max(0,Math.round((obj.amt+delta)*10)/10);
+  if(delta>0&&!obj.ck)obj.ck=true;
+  saveData();renderAll();
+}
+function toggleObj(obj){
+  obj.ck=!obj.ck;
+  if(!obj.ck&&obj.amt!==undefined)obj.amt=0;
+  saveData();renderAll();
+}
+function togglePlayOpt(playObj){
+  playObj.ck=!playObj.ck;
+  saveData();renderAll();
+}
+function addWaterAmt(idx,delta){
+  const w=state.water[idx];
+  w.amt=Math.max(0,w.amt+delta);
+  if(delta>0&&!w.ck)w.ck=true;
+  saveData();renderAll();
+}
+
+function switchPanel(name){
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  document.querySelector(`[data-panel="${name}"]`).classList.add('active');
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  const panel=document.getElementById('panel-'+name);
+  if(panel)panel.classList.add('active');
+}
+function toggleSection(id){
+  const body=document.getElementById('section-'+id);
+  const head=document.getElementById('head-'+id);
+  body.classList.toggle('open');head.classList.toggle('open');
+}
+let currentMeal='breakfast';
+function switchMeal(name){
+  currentMeal=name;
+  document.querySelectorAll('.meal-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.meal-content').forEach(c=>c.style.display='none');
+  const tab=document.querySelector(`[data-meal="${name}"]`);
+  const content=document.getElementById('meal-'+name);
+  if(tab)tab.classList.add('active');
+  if(content)content.style.display='block';
+}
+function getMealStatus(mealId){
+  const meal=state.meals[mealId];const items=Object.values(meal);
+  const checked=items.filter(i=>i.ck).length;
+  if(checked===items.length)return'ok';if(checked>0)return'partial';return'none';
+}
+function getTotalMilk(){
+  let t=0;
+  [state.meals.breakfast.milk,state.meals.snack2.milk,state.meals.bedtime.milk].forEach(m=>{if(m.ck)t+=m.amt});
+  if(state.meals.snack1.yogurt.ck)t+=state.meals.snack1.yogurt.amt;
+  return t;
+}
+function getTotalGrains(){
+  let t=0;
+  [state.meals.breakfast.bread,state.meals.lunch.rice,state.meals.dinner.rice].forEach(i=>{if(i.ck)t+=i.amt});
+  return t;
+}
+function getTotalVeg(){
+  let t=0;
+  [state.meals.lunch.veg,state.meals.dinner.veg].forEach(i=>{if(i.ck)t+=i.amt});
+  return t;
+}
+function getTotalFruit(){
+  let t=0;
+  [state.meals.snack1.fruit,state.meals.snack2.fruit].forEach(i=>{if(i.ck)t+=i.amt});
+  return t;
+}
+function getTotalProtein(){
+  let t=0;
+  [state.meals.lunch.meat,state.meals.dinner.fish].forEach(i=>{if(i.ck)t+=i.amt});
+  return t;
+}
+function getEggCount(){return state.meals.breakfast.egg.ck?state.meals.breakfast.egg.amt:0}
+function getOutdoorMin(){
+  return state.activity.outdoor.reduce((s,o)=>s+(o.ck?o.amt:0),0);
+}
+function getTotalSleep(){
+  let t=0;
+  if(state.sleep.night.ck)t+=state.sleep.night.amt;
+  if(state.sleep.nap1.ck)t+=state.sleep.nap1.amt;
+  if(state.sleep.nap2.ck)t+=state.sleep.nap2.amt;
+  return t;
+}
+function getWaterAmt(){
+  return state.water.reduce((s,w)=>s+(w.ck?w.amt:0),0);
+}
+function getPlayCount(){
+  return Object.values(state.activity.play).filter(p=>p.ck).length;
+}
+function pctStatus(actual,lo,hi){
+  if(actual>=lo&&actual<=hi)return'ok';
+  if(actual>=lo*0.6&&actual<=hi*1.3)return'warn';
+  return'bad';
+}
+function pctWidth(actual,hi){return Math.min(100,Math.round(actual/hi*100))}
+function calcFeedScore(){
+  const total=Object.values(state.meals).reduce((s,m)=>s+Object.keys(m).length,0);
+  const checked=Object.values(state.meals).reduce((s,m)=>s+Object.values(m).filter(i=>i.ck).length,0);
+  return Math.round(checked/total*100);
+}
+function generateAlerts(){
+  const a=[];
+  const milk=getTotalMilk(),grains=getTotalGrains(),veg=getTotalVeg(),fruit=getTotalFruit();
+  const protein=getTotalProtein(),egg=getEggCount(),water=getWaterAmt(),outdoor=getOutdoorMin(),sleep=getTotalSleep();
+  if(fruit<REF.fruit.lo)a.push({level:'danger',msg:'<strong>水果摄入缺失</strong><br>今日未记录水果，建议补充 '+REF.fruit.lo+'-'+REF.fruit.hi+'g 新鲜水果（如香蕉、苹果泥）'});
+  if(water<REF.water.lo)a.push({level:'danger',msg:'<strong>饮水量严重不足</strong><br>当前 '+water+'ml，距建议下限还差 '+(REF.water.lo-water)+'ml。建议分散在早、中、晚多次少量饮用'});
+  if(veg<REF.veg.lo)a.push({level:'warning',msg:'<strong>蔬菜摄入不足</strong><br>当前 '+veg+'g，低于建议 '+REF.veg.lo+'-'+REF.veg.hi+'g，可在午/晚餐增加绿叶蔬菜'});
+  if(grains>REF.grains.hi)a.push({level:'warning',msg:'<strong>谷物类略超建议</strong><br>今日 '+grains+'g 超过上限 '+REF.grains.hi+'g，可适当减少主食'});
+  if(outdoor<REF.outdoor.lo)a.push({level:'warning',msg:'<strong>户外活动未达标</strong><br>累计 '+outdoor+' 分钟，建议分上下午各安排 '+Math.round(REF.outdoor.lo/2)+'-'+Math.round(REF.outdoor.hi/2)+' 分钟户外'});
+  if(milk<REF.milk.lo)a.push({level:'warning',msg:'<strong>奶量偏低</strong><br>当前 '+milk+'ml，建议 '+REF.milk.lo+'-'+REF.milk.hi+'ml/天'});
+  if(milk>REF.milk.hi)a.push({level:'warning',msg:'<strong>奶量偏高</strong><br>当前 '+milk+'ml 超过 '+REF.milk.hi+'ml，可能影响正餐食欲'});
+  if(!state.meals.dinner.fish.ck&&protein<REF.protein.hi)a.push({level:'info',msg:'<strong>晚餐缺少优质蛋白</strong><br>建议增加鱼类或豆腐 '+(REF.protein.lo/2)+'-'+(REF.protein.hi/2)+'g'});
+  if(!state.supplement.dha.ck)a.push({level:'info',msg:'<strong>DHA 今日未补充</strong><br>如日常鱼类摄入不足，建议补充 DHA 滴剂'});
+  if(getPlayCount()<2)a.push({level:'info',msg:'<strong>亲子互动项目偏少</strong><br>已选 '+getPlayCount()+' 项，建议每天安排 2-3 种不同类型的互动游戏'});
+  if(sleep<REF.sleep.lo)a.push({level:'info',msg:'<strong>睡眠偏少</strong><br>累计 '+sleep+'h，建议 '+REF.sleep.lo+'-'+REF.sleep.hi+'h'});
+  a.push({level:'info',msg:'<strong>12月龄里程碑</strong><br>本月重点：独站 → 扶走 → 独走几步。保持每日行走练习 20-30 分钟'});
+  return a;
+}
+
+function renderSummary(){
+  const feedScore=calcFeedScore(),outdoor=getOutdoorMin();
+  const activeScore=Math.min(100,Math.round(outdoor/REF.outdoor.hi*100));
+  const sleep=getTotalSleep(),sleepScore=Math.min(100,Math.round(sleep/REF.sleep.hi*100));
+  const water=getWaterAmt(),waterScore=Math.min(100,Math.round(water/REF.water.hi*100));
+  const cards=[
+    {val:feedScore+'%',lbl:'喂养完成',cls:feedScore>=80?'s-ok':feedScore>=50?'s-warn':'s-bad'},
+    {val:activeScore+'%',lbl:'户外活动',cls:activeScore>=80?'s-ok':activeScore>=50?'s-warn':'s-bad'},
+    {val:sleepScore+'%',lbl:'睡眠',cls:sleepScore>=80?'s-ok':sleepScore>=50?'s-warn':'s-bad'},
+    {val:waterScore+'%',lbl:'饮水',cls:waterScore>=80?'s-ok':waterScore>=50?'s-warn':'s-bad'}
+  ];
+  document.getElementById('summaryCards').innerHTML=cards.map(c=>
+    '<div class="summary-card '+c.cls+'"><div class="val">'+c.val+'</div><div class="lbl">'+c.lbl+'</div></div>'
+  ).join('');
+}
+
+function renderCheckin(){
+  const feedScore=calcFeedScore();
+  const feedStatus=feedScore>=90?'已完成':feedScore>=50?'部分完成':'未开始';
+  const feedCls=feedScore>=90?'done':feedScore>=50?'partial':'miss';
+
+  const outdoor=getOutdoorMin();
+  const activeOk=outdoor>=REF.outdoor.lo;
+  const activeStatus=activeOk?'已达标':'未达标';
+  const activeCls=activeOk?'done':'miss';
+
+  const sleep=getTotalSleep();
+  const sleepOk=sleep>=REF.sleep.lo&&sleep<=REF.sleep.hi;
+  const sleepStatus=sleepOk?'已达标':sleep<REF.sleep.lo?'不足':'偏多';
+  const sleepCls=sleepOk?'done':sleep<REF.sleep.lo?'miss':'partial';
+
+  const supChecked=(state.supplement.ad.ck?1:0)+(state.supplement.dha.ck?1:0);
+  const supOk=supChecked===2;
+  const supStatus=supOk?'已打卡':supChecked>0?'部分':'未打卡';
+  const supCls=supOk?'done':supChecked>0?'partial':'miss';
+
+  const waterOk=getWaterAmt()>=REF.water.lo;
+  const waterStatus=waterOk?'已达标':'未达标';
+  const waterCls=waterOk?'done':'miss';
+
+  const mealTabNames={breakfast:'早餐',snack1:'上午加餐',lunch:'午餐',snack2:'下午加餐',dinner:'晚餐',bedtime:'睡前奶'};
+  const mealTabsHtml=Object.entries(mealTabNames).map(([id,name])=>{
+    const st=getMealStatus(id);
+    return '<button class="meal-tab'+(id===currentMeal?' active':'')+'" data-meal="'+id+'" onclick="switchMeal(\''+id+'\')">'+name+'<span class="dot '+st+'"></span></button>';
+  }).join('');
+
+  const itemLabels={milk:'配方奶/牛奶',egg:'鸡蛋',bread:'馒头/面包',porridge:'粥/米粉',fruit:'水果',yogurt:'酸奶',rice:'米饭/面条',meat:'肉类（猪/牛/鸡）',veg:'蔬菜',fish:'鱼类/豆腐'};
+  const refLabels={milk_bf:{lo:150,hi:200,u:'ml'},milk_s2:{lo:120,hi:150,u:'ml'},milk_bt:{lo:150,hi:200,u:'ml'},egg:{lo:0.5,hi:1,u:'个'},bread:{lo:30,hi:50,u:'g'},porridge:{lo:0,hi:0,u:'ml'},fruit:{lo:30,hi:50,u:'g'},yogurt:{lo:50,hi:80,u:'ml'},rice:{lo:40,hi:80,u:'g'},meat:{lo:25,hi:40,u:'g'},veg:{lo:40,hi:60,u:'g'},fish:{lo:25,hi:40,u:'g'}};
+
+  const mealContents=Object.entries(state.meals).map(([mealId,items])=>{
+    const rows=Object.entries(items).map(([key,item])=>{
+      const ref=refLabels[key]||{lo:0,hi:0,u:'g'};
+      const refText=ref.lo===0&&ref.hi===0?'可选':'建议 '+ref.lo+'-'+ref.hi+ref.u;
+      const step=ref.u==='个'?0.5:(ref.u==='ml'?30:10);
+      const amtHtml=item.amt!==undefined?
+        '<div class="amt-group"><button class="amt-btn" onclick="event.stopPropagation();updateObjVal(state.meals[\''+mealId+'\'][\''+key+'\'],'+(-step)+')">-</button><span class="amt-val">'+item.amt+'</span><span class="amt-unit">'+ref.u+'</span><button class="amt-btn" onclick="event.stopPropagation();updateObjVal(state.meals[\''+mealId+'\'][\''+key+'\'],'+step+')">+</button></div>':'';
+      return '<div class="check-row"><input type="checkbox" '+(item.ck?'checked':'')+' onchange="toggleObj(state.meals[\''+mealId+'\'][\''+key+'\'])"><label onclick="toggleObj(state.meals[\''+mealId+'\'][\''+key+'\'])">'+(itemLabels[key]||key)+'</label>'+amtHtml+'<span class="ref-tag">'+refText+'</span></div>';
+    }).join('');
+    return '<div id="meal-'+mealId+'" class="meal-content" style="display:'+(mealId===currentMeal?'block':'none')+'">'+rows+'</div>';
+  }).join('');
+
+  const outdoorSessions=state.activity.outdoor.map((o,i)=>{
+    return '<div class="outdoor-session"><span class="session-label">'+o.label+'</span><input type="checkbox" '+(o.ck?'checked':'')+' onchange="toggleObj(state.activity.outdoor['+i+'])"><div class="amt-group"><button class="amt-btn" onclick="event.stopPropagation();updateObjVal(state.activity.outdoor['+i+'],-15)">-</button><span class="amt-val">'+o.amt+'</span><span class="amt-unit">分钟</span><button class="amt-btn" onclick="event.stopPropagation();updateObjVal(state.activity.outdoor['+i+'],15)">+</button></div></div>';
+  }).join('');
+
+  const outdoorPct=pctWidth(getOutdoorMin(),REF.outdoor.hi);
+
+  const playChips=PLAY_OPTIONS.map(p=>{
+    const ck=state.activity.play[p.id].ck;
+    return '<div class="play-chip'+(ck?' checked':'')+'" onclick="togglePlayOpt(state.activity.play[\''+p.id+'\'])"><span class="play-emoji">'+p.emoji+'</span>'+p.label+'</div>';
+  }).join('');
+
+  const waterChips=state.water.map((w,i)=>{
+    const cls=w.ck?'recording':(i===0||state.water[i-1]?.ck)?'active':'';
+    return '<div class="water-chip '+cls+'" onclick="if(!state.water['+i+'].ck){state.water['+i+'].ck=true;state.water['+i+'].amt=50;saveData();renderAll();}">'+w.label+'</div>';
+  }).join('');
+
+  const waterDetails=state.water.map((w,i)=>{
+    if(!w.ck)return'';
+    return '<div class="water-detail"><span class="time-label">'+w.label+'</span><div class="amt-group"><button class="amt-btn" onclick="event.stopPropagation();addWaterAmt('+i+',-20)">-</button><span class="amt-val">'+w.amt+'</span><span class="amt-unit">ml</span><button class="amt-btn" onclick="event.stopPropagation();addWaterAmt('+i+',20)">+</button></div><span style="font-size:11px;color:var(--txt3);cursor:pointer;margin-left:auto" onclick="state.water['+i+'].ck=false;state.water['+i+'].amt=0;saveData();renderAll()">清除</span></div>';
+  }).join('');
+
+  const waterTotal=getWaterAmt();
+  const waterPct=Math.min(100,Math.round(waterTotal/REF.water.hi*100));
+
+  const sleepTotal=getTotalSleep();
+
+  return '<div class="panel active fade" id="panel-checkin">'+
+
+    '<div class="section"><div class="section-head open" id="head-feed" onclick="toggleSection(\'feed\')"><span class="title"><span class="icon">&#127860;</span>喂养打卡（3餐2点）</span><span class="status-tag '+feedCls+'">'+feedStatus+'</span><span class="arrow">&#9660;</span></div><div class="section-body open" id="section-feed"><div class="meal-tabs">'+mealTabsHtml+'</div>'+mealContents+'</div></div>'+
+
+    '<div class="section"><div class="section-head" id="head-activity" onclick="toggleSection(\'activity\')"><span class="title"><span class="icon">&#127939;</span>活动与户外打卡</span><span class="status-tag '+activeCls+'">'+activeStatus+'</span><span class="arrow">&#9660;</span></div><div class="section-body" id="section-activity">'+
+      '<div style="font-size:12px;color:var(--txt2);margin-bottom:8px">户外活动（可分多次记录）</div>'+
+      '<div class="outdoor-sessions">'+outdoorSessions+'</div>'+
+      '<div class="outdoor-summary"><span>累计户外</span><span class="total-val">'+getOutdoorMin()+'</span><span>分钟 / 建议 '+REF.outdoor.lo+'-'+REF.outdoor.hi+' 分钟</span></div>'+
+      '<div class="check-row"><input type="checkbox" '+(state.activity.walk.ck?'checked':'')+' onchange="toggleObj(state.activity.walk)"><label onclick="toggleObj(state.activity.walk)">独立行走练习</label><div class="amt-group"><button class="amt-btn" onclick="event.stopPropagation();updateObjVal(state.activity.walk,-10)">-</button><span class="amt-val">'+state.activity.walk.amt+'</span><span class="amt-unit">分钟</span><button class="amt-btn" onclick="event.stopPropagation();updateObjVal(state.activity.walk,10)">+</button></div><span class="ref-tag">建议 20-30 分钟</span></div>'+
+      '<div style="font-size:12px;color:var(--txt2);margin:10px 0 6px">亲子互动游戏（可多选）</div>'+
+      '<div class="play-grid">'+playChips+'</div>'+
+      '<div class="play-summary">已选 <strong style="color:var(--primary-dk)">'+getPlayCount()+'</strong> 项互动游戏</div>'+
+    '</div></div>'+
+
+    '<div class="section"><div class="section-head" id="head-sleep" onclick="toggleSection(\'sleep\')"><span class="title"><span class="icon">&#127769;</span>睡眠打卡</span><span class="status-tag '+sleepCls+'">'+sleepStatus+'</span><span class="arrow">&#9660;</span></div><div class="section-body" id="section-sleep">'+
+      '<div class="check-row"><input type="checkbox" '+(state.sleep.night.ck?'checked':'')+' onchange="toggleObj(state.sleep.night)"><label onclick="toggleObj(state.sleep.night)">夜间睡眠</label><span class="amt-val">'+state.sleep.night.amt+'</span><span class="amt-unit">小时</span><span class="ref-tag">建议 9-11小时</span></div>'+
+      '<div class="check-row"><input type="checkbox" '+(state.sleep.nap1.ck?'checked':'')+' onchange="toggleObj(state.sleep.nap1)"><label onclick="toggleObj(state.sleep.nap1)">上午小睡</label><span class="amt-val">'+state.sleep.nap1.amt+'</span><span class="amt-unit">小时</span><span class="ref-tag">建议 1-1.5小时</span></div>'+
+      '<div class="check-row"><input type="checkbox" '+(state.sleep.nap2.ck?'checked':'')+' onchange="toggleObj(state.sleep.nap2)"><label onclick="toggleObj(state.sleep.nap2)">下午小睡</label><span class="amt-val">'+state.sleep.nap2.amt+'</span><span class="amt-unit">小时</span><span class="ref-tag">建议 1-1.5小时</span></div>'+
+      '<div class="sleep-summary"><span>今日累计</span><span class="sleep-total">'+sleepTotal+'h</span><span>/ 建议 '+REF.sleep.lo+'-'+REF.sleep.hi+'h</span><span style="margin-left:auto;font-size:11px;color:'+(sleepOk?'var(--primary-dk)':'var(--danger-dk)')+'">'+(sleepOk?'达标':'需调整')+'</span></div>'+
+    '</div></div>'+
+
+    '<div class="section"><div class="section-head" id="head-water" onclick="toggleSection(\'water\')"><span class="title"><span class="icon">&#128167;</span>饮水记录（多次）</span><span class="status-tag '+waterCls+'">'+waterStatus+'</span><span class="arrow">&#9660;</span></div><div class="section-body" id="section-water">'+
+      '<div style="font-size:12px;color:var(--txt2);margin-bottom:8px">点击下方时间段快速记录，每次默认 50ml</div>'+
+      '<div class="water-entries">'+waterChips+'</div>'+
+      waterDetails+
+      '<div class="water-total"><span>累计饮水</span><span class="total-val">'+waterTotal+'</span><span>ml / 建议 '+REF.water.lo+'-'+REF.water.hi+'ml</span></div>'+
+      '<div class="progress-row"><span>进度</span><div class="progress-bar"><div class="progress-fill '+(waterTotal>=REF.water.lo?'good':waterTotal>=REF.water.lo*0.5?'warn':'bad')+'" style="width:'+waterPct+'%"></div></div><span>'+waterTotal+'/'+REF.water.hi+'ml</span></div>'+
+    '</div></div>'+
+
+    '<div class="section"><div class="section-head" id="head-sup" onclick="toggleSection(\'sup\')"><span class="title"><span class="icon">&#128138;</span>补充剂打卡</span><span class="status-tag '+supCls+'">'+supStatus+'</span><span class="arrow">&#9660;</span></div><div class="section-body" id="section-sup">'+
+      '<div class="sup-card"><div class="check-row" style="padding:0;border:none"><input type="checkbox" '+(state.supplement.ad.ck?'checked':'')+' onchange="state.supplement.ad.ck=!state.supplement.ad.ck;saveData();renderAll()"><label onclick="state.supplement.ad.ck=!state.supplement.ad.ck;saveData();renderAll()" style="font-weight:500">维生素AD滴剂</label><span class="ref-tag">每日必补</span></div><div class="sup-detail">剂量：维生素A 1500-2000U + 维生素D 400-800U</div></div>'+
+      '<div class="sup-card"><div class="check-row" style="padding:0;border:none"><input type="checkbox" '+(state.supplement.dha.ck?'checked':'')+' onchange="state.supplement.dha.ck=!state.supplement.dha.ck;saveData();renderAll()"><label onclick="state.supplement.dha.ck=!state.supplement.dha.ck;saveData();renderAll()">DHA</label><span class="ref-tag">建议补充</span></div></div>'+
+      '<div class="sup-note"><strong>科学依据：</strong>《中国儿童维生素A、维生素D临床应用专家共识（2024）》明确建议：<strong>每日持续补充维生素AD</strong>，不建议AD与D3交替服用——交替补充会降低依从性，容易漏服错服。维生素A和D是"好搭档"，A能让D的生物活性提升130%，同补效果更佳。建议补充至青春期（18岁）。</div>'+
+    '</div></div>'+
+
+  '</div>';
+}
+
+function renderAnalysis(){
+  const items=[
+    {icon:'奶',name:'总奶量',detail:'当前 '+getTotalMilk()+'ml',actual:getTotalMilk(),hi:REF.milk.hi,lo:REF.milk.lo,unit:'ml'},
+    {icon:'谷',name:'谷物类',detail:'当前 '+getTotalGrains()+'g',actual:getTotalGrains(),hi:REF.grains.hi,lo:REF.grains.lo,unit:'g'},
+    {icon:'菜',name:'蔬菜类',detail:'当前 '+getTotalVeg()+'g',actual:getTotalVeg(),hi:REF.veg.hi,lo:REF.veg.lo,unit:'g'},
+    {icon:'果',name:'水果类',detail:'当前 '+getTotalFruit()+'g',actual:getTotalFruit(),hi:REF.fruit.hi,lo:REF.fruit.lo,unit:'g'},
+    {icon:'肉',name:'肉禽鱼蛋',detail:'肉类 '+getTotalProtein()+'g + 蛋 '+getEggCount()+'个',actual:getTotalProtein()+getEggCount()*30,hi:REF.protein.hi+30,lo:REF.protein.lo+15,unit:'g'},
+    {icon:'水',name:'饮水',detail:getWaterAmt()+'ml（'+state.water.filter(w=>w.ck).length+' 次记录）',actual:getWaterAmt(),hi:REF.water.hi,lo:REF.water.lo,unit:'ml'}
+  ];
+  const cards=items.map(item=>{
+    const st=pctStatus(item.actual,item.lo,item.hi);
+    const pct=pctWidth(item.actual,item.hi);
+    const label=st==='ok'?'达标':st==='warn'?item.actual<item.lo?'不足':'略超':'严重不足';
+    const cls=st==='ok'?'ok':st==='warn'?'warn':'bad';
+    return '<div class="analysis-card"><div class="analysis-icon '+cls+'">'+item.icon+'</div><div class="analysis-info"><div class="name">'+item.name+'</div><div class="detail">'+item.detail+'</div><div class="progress-row" style="margin-top:6px"><div class="progress-bar"><div class="progress-fill '+cls+'" style="width:'+pct+'%"></div></div><span style="font-size:10px;color:var(--txt3)">'+item.lo+'-'+item.hi+item.unit+'</span></div></div><div class="analysis-score '+cls+'">'+label+'</div></div>';
+  }).join('');
+  return '<div class="panel fade" id="panel-analysis"><div class="analysis-header">今日摄入 vs 参考值（12-15月龄标准）</div>'+cards+'</div>';
+}
+
+function renderAlerts(){
+  const alerts=generateAlerts();
+  const hasAlert=alerts.some(a=>a.level==='danger');
+  document.getElementById('alertBadge').style.display=hasAlert?'block':'none';
+  if(alerts.length===0)return '<div class="panel fade" id="panel-alerts"><div class="empty-state">今日各项指标均达标，宝宝表现很棒！</div></div>';
+  const html=alerts.map(a=>'<div class="alert-item '+a.level+'"><span class="dot"></span><div>'+a.msg+'</div></div>').join('');
+  return '<div class="panel fade" id="panel-alerts">'+html+'</div>';
+}
+
+function renderAll(){
+  renderSummary();
+  const main=document.getElementById('mainContent');
+  const activeBtn=document.querySelector('.nav-item.active');
+  const activePanel=activeBtn?activeBtn.dataset.panel:'checkin';
+  main.innerHTML=renderCheckin()+renderAnalysis()+renderAlerts();
+  const panel=document.getElementById('panel-'+activePanel);
+  if(panel)panel.classList.add('active');
+  document.getElementById('dateDisplay').textContent=today();
+}
+
+loadData();
+renderAll();
+document.getElementById('dateDisplay').textContent=today();
+</script>
+</body>
+</html>

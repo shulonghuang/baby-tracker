@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="宝宝喂养追踪">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍼</text></svg>">
+<title>宝宝喂养追踪</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F9F8F6;--card:#FFFFFF;--text:#3C3A37;--text2:#7A7672;
+  --green:#8AAA94;--green-l:#EAF2EC;--amber:#D4A96A;--amber-l:#FDF6EB;
+  --rose:#C4877A;--rose-l:#F9EDEA;--blue:#8AADB8;--blue-l:#EDF4F6;
+  --border:#E8E5DF;--radius:14px;--radius-sm:10px;
+  --font:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;max-width:480px;margin:0 auto;position:relative;-webkit-tap-highlight-color:transparent}
+.app-screen{padding-bottom:20px}
+.app-header{padding:16px 20px 12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.app-title{font-size:18px;font-weight:700}
+.app-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.app-badge{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;background:var(--green-l);color:var(--green);cursor:pointer;border:none;font-family:var(--font)}
+.app-badge.offline{background:var(--amber-l);color:var(--amber)}
+
+/* Room Panel */
+.room-panel{display:none;background:var(--card);margin:0 16px 12px;border-radius:var(--radius);padding:16px;box-shadow:0 1px 6px rgba(0,0,0,0.03)}
+.room-panel.show{display:block}
+.room-code-display{text-align:center;margin-bottom:12px}
+.room-code-label{font-size:11px;color:var(--text2);margin-bottom:4px}
+.room-code-val{font-size:28px;font-weight:700;letter-spacing:6px;color:var(--green)}
+.room-members{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;justify-content:center}
+.member-chip{padding:6px 14px;border-radius:20px;font-size:12px;background:var(--bg)}
+.member-chip.me{background:var(--green-l);font-weight:600}
+.room-hint-text{font-size:11px;color:var(--text2);text-align:center}
+.room-btns{display:flex;gap:8px;margin-top:8px}
+.room-btn-sm{padding:6px 14px;border-radius:20px;font-size:12px;border:1.5px solid var(--border);cursor:pointer;background:transparent;transition:.2s;font-family:var(--font)}
+.room-btn-sm:hover{border-color:var(--rose);color:var(--rose)}
+.sync-server-input{display:flex;gap:6px;margin-top:8px}
+.sync-input{flex:1;padding:8px 12px;border:1.5px solid var(--border);border-radius:20px;font-size:12px;outline:none;background:var(--bg);font-family:var(--font)}
+
+/* Summary */
+.summary-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:0 16px 12px}
+.summary-card{background:var(--card);border-radius:var(--radius-sm);padding:14px 12px;text-align:center;box-shadow:0 1px 6px rgba(0,0,0,0.03);transition:.2s}
+.summary-val{font-size:22px;font-weight:700;margin-bottom:2px}
+.summary-val.done{color:var(--green)}.summary-val.near{color:var(--amber)}.summary-val.low{color:var(--rose)}
+.summary-label{font-size:11px;color:var(--text2)}
+
+/* Tabs */
+.tab-bar{display:flex;padding:0 16px 12px;gap:6px}
+.tab-btn{flex:1;padding:10px;text-align:center;font-size:13px;font-weight:600;border-radius:var(--radius-sm);cursor:pointer;transition:.2s;border:none;background:transparent;color:var(--text2);position:relative;font-family:var(--font)}
+.tab-btn.active{background:var(--card);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+.tab-dot{position:absolute;top:4px;right:8px;width:7px;height:7px;border-radius:50%;background:var(--rose)}
+.tab-content{display:none;padding:0 16px}
+.tab-content.active{display:block}
+
+/* Section */
+.section{background:var(--card);border-radius:var(--radius);padding:20px;margin-bottom:12px;box-shadow:0 1px 6px rgba(0,0,0,0.03)}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;cursor:pointer;user-select:none}
+.section-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
+.section-chip{font-size:11px;padding:3px 8px;border-radius:10px;font-weight:600}
+.section-chip.done{background:var(--green-l);color:var(--green)}.section-chip.partial{background:var(--amber-l);color:var(--amber)}.section-chip.none{background:var(--rose-l);color:var(--rose)}
+.section-toggle{font-size:12px;color:var(--text2);transition:.2s}
+.section.open .section-toggle{transform:rotate(180deg)}
+.section-body{display:none}
+.section.open .section-body{display:block}
+
+/* Meal tabs */
+.meal-tabs{display:flex;gap:4px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px;-webkit-overflow-scrolling:touch}
+.meal-tab{flex-shrink:0;padding:8px 14px;border-radius:20px;font-size:13px;border:1.5px solid var(--border);cursor:pointer;transition:.2s;white-space:nowrap;background:transparent;font-family:var(--font);color:var(--text2)}
+.meal-tab.active{background:var(--green-l);border-color:var(--green);color:var(--green);font-weight:600}
+
+/* Food */
+.food-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bg)}
+.food-item:last-child{border-bottom:none}
+.food-left{display:flex;align-items:center;gap:10px;flex:1;cursor:pointer;min-width:0}
+.food-check{width:20px;height:20px;border-radius:6px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;transition:.2s;flex-shrink:0}
+.food-check.checked{background:var(--green);border-color:var(--green)}
+.food-check.checked::after{content:'✓';color:#fff;font-size:12px;font-weight:700}
+.food-name{font-size:14px}
+.food-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.food-qty{display:flex;align-items:center;gap:6px;min-width:60px;justify-content:flex-end}
+.food-qty-btn{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border);background:transparent;font-size:16px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;color:var(--text)}
+.food-qty-btn:active{background:var(--border)}
+.food-qty-val{font-size:14px;font-weight:600;min-width:28px;text-align:center}
+.food-ref{font-size:11px;color:var(--text2);min-width:70px;text-align:right}
+.qty-unit{font-size:11px;color:var(--text2);margin-left:2px}
+
+/* Activity */
+.activity-row,.sleep-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bg)}
+.activity-row:last-child,.sleep-row:last-child{border-bottom:none}
+.act-check{width:20px;height:20px;border-radius:6px;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.2s}
+.act-check.checked{background:var(--green);border-color:var(--green)}
+.act-check.checked::after{content:'✓';color:#fff;font-size:12px;font-weight:700}
+.act-label{font-size:14px;display:flex;align-items:center;gap:6px}
+
+/* Games */
+.game-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
+.game-card{padding:12px 6px;border-radius:var(--radius-sm);border:1.5px solid var(--border);text-align:center;cursor:pointer;transition:.2s;font-size:12px;line-height:1.4}
+.game-card:hover,.game-card.selected{border-color:var(--green);background:var(--green-l)}
+.game-card.selected{font-weight:600;color:var(--green)}
+.game-emoji{font-size:22px;display:block;margin-bottom:4px}
+
+/* Water */
+.water-slots{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.water-slot{padding:8px 12px;border-radius:20px;font-size:12px;border:1.5px solid var(--border);cursor:pointer;transition:.2s;display:flex;align-items:center;gap:4px}
+.water-slot.recorded{background:var(--green-l);border-color:var(--green)}
+.water-slot .slot-amount{font-weight:600;margin-left:4px}
+
+/* Bottom summary */
+.bottom-summary{padding:10px 0;font-size:13px;color:var(--text2);display:flex;align-items:center;gap:8px;border-top:1px solid var(--bg);margin-top:6px}
+.bottom-summary .ref{color:var(--blue)}
+
+/* Analysis */
+.analysis-item{padding:14px 0;border-bottom:1px solid var(--bg)}
+.analysis-item:last-child{border-bottom:none}
+.analysis-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.analysis-name{font-size:14px;font-weight:600}
+.analysis-status{font-size:12px;font-weight:600;padding:2px 8px;border-radius:10px}
+.analysis-status.ok{background:var(--green-l);color:var(--green)}.analysis-status.warn{background:var(--amber-l);color:var(--amber)}.analysis-status.bad{background:var(--rose-l);color:var(--rose)}
+.analysis-bar{height:6px;border-radius:3px;background:var(--bg);overflow:hidden;position:relative}
+.analysis-fill{height:100%;border-radius:3px;transition:.3s}
+.analysis-fill.ok{background:var(--green)}.analysis-fill.warn{background:var(--amber)}.analysis-fill.bad{background:var(--rose)}
+.analysis-detail{font-size:12px;color:var(--text2);margin-top:4px}
+
+/* Alerts */
+.alert-item{padding:14px;border-radius:var(--radius-sm);margin-bottom:8px;font-size:13px;line-height:1.5}
+.alert-item.danger{background:var(--rose-l);border-left:3px solid var(--rose)}
+.alert-item.warning{background:var(--amber-l);border-left:3px solid var(--amber)}
+.alert-item.info{background:var(--blue-l);border-left:3px solid var(--blue)}
+.alert-title{font-weight:600;margin-bottom:2px}
+.alert-desc{color:var(--text2);font-size:12px}
+.no-alerts{text-align:center;padding:40px;color:var(--text2)}
+
+/* Science */
+.science-card{background:var(--blue-l);border-radius:var(--radius-sm);padding:14px;margin-top:10px}
+.science-title{font-size:13px;font-weight:700;color:var(--blue);margin-bottom:6px}
+.science-text{font-size:12px;color:var(--text2);line-height:1.6}
+
+/* Sync */
+.sync-text{font-size:11px;color:var(--text2);display:flex;align-items:center;gap:4px}
+.sync-dot{width:6px;height:6px;border-radius:50%;display:inline-block}
+.sync-dot.local{background:var(--amber)}.sync-dot.online{background:var(--green)}
+</style>
+</head>
+<body>
+
+<div class="app-screen" id="appScreen">
+  <div class="app-header">
+    <div class="app-title">🍼 宝宝喂养追踪</div>
+    <div class="app-right">
+      <span class="sync-text" id="syncStatus"><span class="sync-dot local"></span> 本机记录</span>
+      <button class="app-badge offline" id="roomBtn" onclick="toggleRoom()">👨‍👩‍👧 家庭同步</button>
+    </div>
+  </div>
+
+  <!-- Room Panel -->
+  <div class="room-panel" id="roomPanel">
+    <div id="roomContent"></div>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary-row">
+    <div class="summary-card"><div class="summary-val done" id="sumFeeding">0%</div><div class="summary-label">喂养</div></div>
+    <div class="summary-card"><div class="summary-val low" id="sumActivity">0%</div><div class="summary-label">户外</div></div>
+    <div class="summary-card"><div class="summary-val low" id="sumSleep">0%</div><div class="summary-label">睡眠</div></div>
+    <div class="summary-card"><div class="summary-val low" id="sumWater">0%</div><div class="summary-label">饮水</div></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('record')">打卡记录</button>
+    <button class="tab-btn" onclick="switchTab('analysis')">对比分析</button>
+    <button class="tab-btn" id="alertTabBtn" onclick="switchTab('alerts')">智能提醒<span class="tab-dot" id="alertDot" style="display:none"></span></button>
+  </div>
+
+  <!-- Record -->
+  <div class="tab-content active" id="tabRecord">
+    <div class="section open" id="secFeeding">
+      <div class="section-header" onclick="toggleSection('secFeeding')">
+        <div class="section-title">🍽️ 喂养打卡 <span class="section-chip none" id="chipFeeding">未记录</span></div>
+        <span class="section-toggle">▼</span>
+      </div>
+      <div class="section-body">
+        <div class="meal-tabs" id="mealTabs"></div>
+        <div id="mealContent"></div>
+      </div>
+    </div>
+
+    <div class="section" id="secActivity">
+      <div class="section-header" onclick="toggleSection('secActivity')">
+        <div class="section-title">🏃 活动打卡 <span class="section-chip none" id="chipActivity">未记录</span></div>
+        <span class="section-toggle">▼</span>
+      </div>
+      <div class="section-body" id="activityBody"></div>
+    </div>
+
+    <div class="section" id="secSleep">
+      <div class="section-header" onclick="toggleSection('secSleep')">
+        <div class="section-title">😴 睡眠记录 <span class="section-chip none" id="chipSleep">未记录</span></div>
+        <span class="section-toggle">▼</span>
+      </div>
+      <div class="section-body" id="sleepBody"></div>
+    </div>
+
+    <div class="section" id="secWater">
+      <div class="section-header" onclick="toggleSection('secWater')">
+        <div class="section-title">💧 饮水记录 <span class="section-chip none" id="chipWater">未记录</span></div>
+        <span class="section-toggle">▼</span>
+      </div>
+      <div class="section-body" id="waterBody"></div>
+    </div>
+
+    <div class="section" id="secSupps">
+      <div class="section-header" onclick="toggleSection('secSupps')">
+        <div class="section-title">💊 补充剂 <span class="section-chip none" id="chipSupps">未记录</span></div>
+        <span class="section-toggle">▼</span>
+      </div>
+      <div class="section-body" id="suppsBody"></div>
+    </div>
+  </div>
+
+  <!-- Analysis -->
+  <div class="tab-content" id="tabAnalysis">
+    <div class="section" id="analysisContent"></div>
+  </div>
+
+  <!-- Alerts -->
+  <div class="tab-content" id="tabAlerts">
+    <div class="section" id="alertsContent"></div>
+  </div>
+</div>
+
+<script>
+// ========== DATA ==========
+const TODAY = new Date().toISOString().slice(0, 10);
+
+const MEALS = [
+  { id:'breakfast', label:'早餐 7:30', emoji:'🌅' },
+  { id:'morning_snack', label:'上午加餐 10:00', emoji:'🍌' },
+  { id:'lunch', label:'午餐 12:00', emoji:'🍚' },
+  { id:'afternoon_snack', label:'下午加餐 15:30', emoji:'🥛' },
+  { id:'dinner', label:'晚餐 18:00', emoji:'🍜' },
+  { id:'night_milk', label:'睡前奶 20:30', emoji:'🌙' }
+];
+
+const MEAL_FOODS = {
+  breakfast:[
+    { id:'milk', name:'牛奶/配方奶', unit:'ml', ref:200, step:10 },
+    { id:'egg', name:'鸡蛋', unit:'个', ref:1, step:0.5 },
+    { id:'bread', name:'面包/馒头', unit:'片', ref:1, step:0.5 },
+    { id:'porridge', name:'粥/米糊', unit:'碗', ref:0.5, step:0.25 }
+  ],
+  morning_snack:[
+    { id:'fruit', name:'水果', unit:'份', ref:1, step:0.5 },
+    { id:'yogurt', name:'酸奶', unit:'ml', ref:100, step:10 },
+    { id:'biscuit', name:'饼干/小点心', unit:'块', ref:2, step:1 }
+  ],
+  lunch:[
+    { id:'rice', name:'米饭/面条', unit:'碗', ref:0.75, step:0.25 },
+    { id:'meat', name:'肉/鱼/虾', unit:'份', ref:1, step:0.5 },
+    { id:'veggie', name:'蔬菜', unit:'份', ref:1.5, step:0.5 },
+    { id:'soup', name:'汤', unit:'碗', ref:0.5, step:0.25 }
+  ],
+  afternoon_snack:[
+    { id:'fruit2', name:'水果', unit:'份', ref:1, step:0.5 },
+    { id:'milk2', name:'牛奶/酸奶', unit:'ml', ref:150, step:10 },
+    { id:'snack2', name:'小点心', unit:'块', ref:1, step:1 }
+  ],
+  dinner:[
+    { id:'rice2', name:'米饭/面食', unit:'碗', ref:0.75, step:0.25 },
+    { id:'meat2', name:'肉/鱼/豆制品', unit:'份', ref:1, step:0.5 },
+    { id:'veggie2', name:'蔬菜', unit:'份', ref:1.5, step:0.5 }
+  ],
+  night_milk:[
+    { id:'milk3', name:'牛奶/配方奶', unit:'ml', ref:200, step:10 }
+  ]
+};
+
+const GAMES = [
+  { id:'reading', emoji:'📖', name:'绘本阅读' },
+  { id:'blocks', emoji:'🧱', name:'积木搭建' },
+  { id:'singing', emoji:'🎵', name:'唱歌跳舞' },
+  { id:'fingers', emoji:'👋', name:'手指游戏' },
+  { id:'hide_seek', emoji:'🙈', name:'捉迷藏' },
+  { id:'ball', emoji:'⚽', name:'球类游戏' },
+  { id:'drawing', emoji:'🎨', name:'涂鸦画画' },
+  { id:'nature', emoji:'🌿', name:'自然探索' }
+];
+
+const WATER_SLOTS = [
+  { id:'morning', label:'早起', emoji:'☀️' },
+  { id:'after_outdoor', label:'户外后', emoji:'🏃' },
+  { id:'after_nap', label:'午睡后', emoji:'😴' },
+  { id:'after_dinner', label:'晚饭后', emoji:'🍽️' },
+  { id:'before_bed', label:'睡前', emoji:'🌙' }
+];
+
+function defaultFeeding() {
+  const d = {};
+  for (const m of MEALS) { d[m.id] = { completed: false, items: {} };
+    for (const f of (MEAL_FOODS[m.id]||[])) d[m.id].items[f.id] = { checked: false, qty:0 };
+  }
+  return d;
+}
+
+function defaultData() {
+  return {
+    feeding: defaultFeeding(),
+    activity: { outdoor_am:false, outdoor_am_min:30, outdoor_pm:false, outdoor_pm_min:30, walking:false, walking_min:15, games:[] },
+    sleep: { night:0, nap_am:0, nap_pm:0 },
+    water: { records:[] },
+    supplements: { ad:false, dha:false }
+  };
+}
+
+// ========== STORAGE ==========
+const STORAGE_KEY = 'baby_tracker_v2';
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const all = JSON.parse(raw);
+      if (all[TODAY]) return all[TODAY];
+    }
+  } catch(e) {}
+  return defaultData();
+}
+
+function saveData(data) {
+  let all = {};
+  try { all = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch(e) {}
+  all[TODAY] = data;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+  renderAll();
+}
+
+// ========== STATE ==========
+let state = loadData();
+let currentMeal = 'breakfast';
+
+// ========== RENDER ==========
+function renderAll() {
+  renderMealTabs();
+  renderMealContent();
+  renderActivity();
+  renderSleep();
+  renderWater();
+  renderSupps();
+  renderAnalysis();
+  updateSummary();
+  renderChips();
+  renderAlerts();
+  renderRoomPanel();
+}
+
+function renderMealTabs() {
+  document.getElementById('mealTabs').innerHTML = MEALS.map(m =>
+    `<button class="meal-tab${currentMeal===m.id?' active':''}" onclick="selectMeal('${m.id}')">${m.emoji} ${m.label}</button>`
+  ).join('');
+}
+
+function selectMeal(id) { currentMeal = id; renderMealTabs(); renderMealContent(); }
+
+function renderMealContent() {
+  const foods = MEAL_FOODS[currentMeal] || [];
+  const meal = state.feeding[currentMeal] || { completed:false, items:{} };
+  document.getElementById('mealContent').innerHTML = foods.map(f => {
+    const item = meal.items[f.id] || { checked:false, qty:0 };
+    return `<div class="food-item">
+      <div class="food-left" onclick="toggleFood('${currentMeal}','${f.id}')">
+        <div class="food-check${item.checked?' checked':''}"></div>
+        <span class="food-name">${f.name}</span>
+      </div>
+      <div class="food-right">
+        ${item.checked ? `<div class="food-qty">
+          <button class="food-qty-btn" onclick="event.stopPropagation();adjustQty('${currentMeal}','${f.id}',-${f.step})">−</button>
+          <span class="food-qty-val">${item.qty}</span>
+          <button class="food-qty-btn" onclick="event.stopPropagation();adjustQty('${currentMeal}','${f.id}',${f.step})">+</button>
+          <span class="qty-unit">${f.unit}</span>
+        </div>` : ''}
+        <span class="food-ref">建议 ${f.ref}${f.unit}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleFood(mealId, foodId) {
+  if (!state.feeding[mealId]) state.feeding[mealId] = { completed:false, items:{} };
+  const item = state.feeding[mealId].items[foodId] || { checked:false, qty:0 };
+  item.checked = !item.checked;
+  if (item.checked && item.qty === 0) {
+    const f = (MEAL_FOODS[mealId]||[]).find(x => x.id===foodId);
+    if (f) item.qty = f.ref;
+  }
+  if (!item.checked) item.qty = 0;
+  state.feeding[mealId].items[foodId] = item;
+  state.feeding[mealId].completed = (MEAL_FOODS[mealId]||[]).every(f => state.feeding[mealId].items[f.id]?.checked);
+  saveData(state);
+}
+
+function adjustQty(mealId, foodId, delta) {
+  if (!state.feeding[mealId]?.items[foodId]) return;
+  state.feeding[mealId].items[foodId].qty = Math.max(0, Math.round((state.feeding[mealId].items[foodId].qty + delta) * 100) / 100);
+  saveData(state);
+}
+
+function renderActivity() {
+  const a = state.activity;
+  document.getElementById('activityBody').innerHTML = `
+    <div class="activity-row">
+      <span class="act-label">☀️ 上午户外活动</span>
+      <div style="display:flex;align-items:center;gap:6px">
+        <div class="act-check${a.outdoor_am?' checked':''}" onclick="toggleAct('outdoor_am')"></div>
+        <div class="food-qty">
+          <button class="food-qty-btn" onclick="adjustAct('outdoor_am_min',-15)">−</button><span class="food-qty-val">${a.outdoor_am_min}</span><button class="food-qty-btn" onclick="adjustAct('outdoor_am_min',15)">+</button><span class="qty-unit">分钟</span>
+        </div>
+      </div>
+    </div>
+    <div class="activity-row">
+      <span class="act-label">🌤️ 下午户外活动</span>
+      <div style="display:flex;align-items:center;gap:6px">
+        <div class="act-check${a.outdoor_pm?' checked':''}" onclick="toggleAct('outdoor_pm')"></div>
+        <div class="food-qty">
+          <button class="food-qty-btn" onclick="adjustAct('outdoor_pm_min',-15)">−</button><span class="food-qty-val">${a.outdoor_pm_min}</span><button class="food-qty-btn" onclick="adjustAct('outdoor_pm_min',15)">+</button><span class="qty-unit">分钟</span>
+        </div>
+      </div>
+    </div>
+    <div class="activity-row">
+      <span class="act-label">🚶 步行/行走练习</span>
+      <div style="display:flex;align-items:center;gap:6px">
+        <div class="act-check${a.walking?' checked':''}" onclick="toggleAct('walking')"></div>
+        <div class="food-qty">
+          <button class="food-qty-btn" onclick="adjustAct('walking_min',-5)">−</button><span class="food-qty-val">${a.walking_min}</span><button class="food-qty-btn" onclick="adjustAct('walking_min',5)">+</button><span class="qty-unit">分钟</span>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:12px;font-size:13px;font-weight:600;color:var(--text2)">亲子互动游戏</div>
+    <div class="game-grid">
+      ${GAMES.map(g => `<div class="game-card${a.games.includes(g.id)?' selected':''}" onclick="toggleGame('${g.id}')"><span class="game-emoji">${g.emoji}</span>${g.name}</div>`).join('')}
+    </div>
+    <div class="bottom-summary">总户外时长：${(a.outdoor_am?a.outdoor_am_min:0)+(a.outdoor_pm?a.outdoor_pm_min:0)} 分钟 <span class="ref">参考 60-120 分钟</span> | 游戏 ${a.games.length} 项</div>`;
+}
+
+function toggleAct(prop) { state.activity[prop] = !state.activity[prop]; saveData(state); }
+function adjustAct(prop, d) { state.activity[prop] = Math.max(0, state.activity[prop]+d); saveData(state); }
+function toggleGame(id) {
+  const i = state.activity.games.indexOf(id);
+  if (i>=0) state.activity.games.splice(i,1); else state.activity.games.push(id);
+  saveData(state);
+}
+
+function renderSleep() {
+  const s = state.sleep;
+  document.getElementById('sleepBody').innerHTML = `
+    <div class="sleep-row"><span>🌙 夜间睡眠</span><div class="food-qty"><button class="food-qty-btn" onclick="adjustSleep('night',-0.5)">−</button><span class="food-qty-val">${s.night}</span><button class="food-qty-btn" onclick="adjustSleep('night',0.5)">+</button><span class="qty-unit">小时</span></div></div>
+    <div class="sleep-row"><span>☀️ 上午小睡</span><div class="food-qty"><button class="food-qty-btn" onclick="adjustSleep('nap_am',-0.5)">−</button><span class="food-qty-val">${s.nap_am}</span><button class="food-qty-btn" onclick="adjustSleep('nap_am',0.5)">+</button><span class="qty-unit">小时</span></div></div>
+    <div class="sleep-row"><span>🌤️ 下午小睡</span><div class="food-qty"><button class="food-qty-btn" onclick="adjustSleep('nap_pm',-0.5)">−</button><span class="food-qty-val">${s.nap_pm}</span><button class="food-qty-btn" onclick="adjustSleep('nap_pm',0.5)">+</button><span class="qty-unit">小时</span></div></div>
+    <div class="bottom-summary">总睡眠：${s.night+s.nap_am+s.nap_pm} 小时 <span class="ref">参考 12-14 小时</span></div>`;
+}
+function adjustSleep(p, d) { state.sleep[p] = Math.max(0, Math.round((state.sleep[p]+d)*10)/10); saveData(state); }
+
+function renderWater() {
+  const w = state.water;
+  const total = (w.records||[]).reduce((s,r)=>s+(r.amount||0),0);
+  document.getElementById('waterBody').innerHTML = `
+    <div class="water-slots">
+      ${WATER_SLOTS.map(s=>{const r=(w.records||[]).find(x=>x.slot===s.id);return `<div class="water-slot${r?' recorded':''}" onclick="toggleWater('${s.id}')">${s.emoji} ${s.label}${r?`<span class="slot-amount">${r.amount}ml</span>`:''}</div>`;}).join('')}
+    </div>
+    ${(w.records||[]).map(r=>`<div class="activity-row"><span>${(WATER_SLOTS.find(s=>s.id===r.slot)||{}).emoji||'💧'} ${(WATER_SLOTS.find(s=>s.id===r.slot)||{}).label||''}</span><div class="food-qty"><button class="food-qty-btn" onclick="adjustWater('${r.slot}',-20)">−</button><span class="food-qty-val">${r.amount}</span><button class="food-qty-btn" onclick="adjustWater('${r.slot}',20)">+</button><span class="qty-unit">ml</span></div><button style="background:none;border:none;color:var(--rose);font-size:12px;cursor:pointer" onclick="removeWater('${r.slot}')">清除</button></div>`).join('') || '<div style="padding:20px;text-align:center;color:var(--text2);font-size:13px">点击上方时间段记录饮水量</div>'}
+    <div class="bottom-summary">总饮水量：${total} ml <span class="ref">参考 200-300 ml（含汤）</span></div>`;
+}
+
+function toggleWater(slot) {
+  const records = state.water.records||[];
+  const i = records.findIndex(r=>r.slot===slot);
+  if (i>=0) records.splice(i,1); else records.push({slot,amount:50});
+  state.water.records = records; saveData(state);
+}
+function adjustWater(slot,d) {
+  const r = state.water.records.find(x=>x.slot===slot);
+  if (r) { r.amount = Math.max(0, r.amount+d); saveData(state); }
+}
+function removeWater(slot) {
+  state.water.records = state.water.records.filter(r=>r.slot!==slot);
+  saveData(state);
+}
+
+function renderSupps() {
+  document.getElementById('suppsBody').innerHTML = `
+    <div class="activity-row"><span>💊 维生素AD（A 1500-2000U + D 400-800U）</span><div class="act-check${state.supplements.ad?' checked':''}" onclick="toggleSupp('ad')"></div></div>
+    <div class="activity-row"><span>🐟 DHA（建议补充）</span><div class="act-check${state.supplements.dha?' checked':''}" onclick="toggleSupp('dha')"></div></div>
+    <div class="science-card"><div class="science-title">📚 科学依据</div><div class="science-text">《中国儿童维生素A、维生素D临床应用专家共识（2024）》明确建议：<b>每日持续补充AD，不建议与D3交替服用</b>。交替补充会降低依从性，容易漏服错服。维生素A能让D的生物活性提升 <b>130%</b>，同补效果更佳。建议补充至 <b>青春期（18岁）</b>。</div></div>`;
+}
+function toggleSupp(p) { state.supplements[p] = !state.supplements[p]; saveData(state); }
+
+// ========== SUMMARY & CHIPS ==========
+function updateSummary() {
+  let meals=0;
+  for (const m of MEALS) { const meal = state.feeding[m.id]; if (meal && Object.values(meal.items||{}).some(i=>i.checked)) meals++; }
+  const fp = Math.min(100,Math.round(meals/6*100));
+  document.getElementById('sumFeeding').textContent = fp+'%';
+  document.getElementById('sumFeeding').className = 'summary-val '+(fp>=80?'done':fp>=50?'near':'low');
+
+  const to = (state.activity.outdoor_am?state.activity.outdoor_am_min:0)+(state.activity.outdoor_pm?state.activity.outdoor_pm_min:0);
+  const ap = Math.min(100,Math.round(to/60*100));
+  document.getElementById('sumActivity').textContent = ap+'%';
+  document.getElementById('sumActivity').className = 'summary-val '+(ap>=80?'done':ap>=40?'near':'low');
+
+  const ts = state.sleep.night+state.sleep.nap_am+state.sleep.nap_pm;
+  const sp = Math.min(100,Math.round(ts/12*100));
+  document.getElementById('sumSleep').textContent = sp+'%';
+  document.getElementById('sumSleep').className = 'summary-val '+(sp>=80?'done':sp>=60?'near':'low');
+
+  const tw = (state.water.records||[]).reduce((s,r)=>s+(r.amount||0),0);
+  const wp = Math.min(100,Math.round(tw/200*100));
+  document.getElementById('sumWater').textContent = wp+'%';
+  document.getElementById('sumWater').className = 'summary-val '+(wp>=80?'done':wp>=40?'near':'low');
+}
+
+function renderChips() {
+  function chip(s,cond) {
+    const el = document.getElementById('chip'+s);
+    if (!el) return;
+    let cls='none',txt='未记录';
+    if (cond.done) { cls='done'; txt=cond.txt; }
+    else if (cond.partial) { cls='partial'; txt=cond.txt2||'部分'; }
+    el.className='section-chip '+cls; el.textContent=txt;
+  }
+  let meals=0;
+  for (const m of MEALS) if (state.feeding[m.id] && Object.values(state.feeding[m.id].items||{}).some(i=>i.checked)) meals++;
+  chip('Feeding',{done:meals>=5,partial:meals>=2,txt:'已完成',txt2:'部分'});
+
+  const to = (state.activity.outdoor_am?state.activity.outdoor_am_min:0)+(state.activity.outdoor_pm?state.activity.outdoor_pm_min:0);
+  chip('Activity',{done:to>=60,partial:to>0,txt:'达标',txt2:'部分'});
+
+  const ts = state.sleep.night+state.sleep.nap_am+state.sleep.nap_pm;
+  chip('Sleep',{done:ts>=10,partial:ts>0,txt:'达标',txt2:'部分'});
+
+  const tw = (state.water.records||[]).reduce((s,r)=>s+(r.amount||0),0);
+  chip('Water',{done:tw>=200,partial:tw>0,txt:'达标',txt2:'部分'});
+
+  chip('Supps',{done:state.supplements.ad,txt:'已补充',txt2:'已补充'});
+}
+
+// ========== ANALYSIS ==========
+function renderAnalysis() {
+  let milk=0,grain=0,veggie=0,fruit=0,meat=0;
+  for (const [mid, meal] of Object.entries(state.feeding)) {
+    const items = meal.items||{};
+    if (items.milk?.checked) milk+=items.milk.qty||0;
+    if (items.milk2?.checked) milk+=items.milk2.qty||0;
+    if (items.milk3?.checked) milk+=items.milk3.qty||0;
+    if (items.yogurt?.checked) milk+=items.yogurt.qty||0;
+    if (items.bread?.checked) grain+=items.bread.qty||0;
+    if (items.porridge?.checked) grain+=items.porridge.qty||0;
+    if (items.rice?.checked) grain+=items.rice.qty||0;
+    if (items.rice2?.checked) grain+=items.rice2.qty||0;
+    if (items.veggie?.checked) veggie+=items.veggie.qty||0;
+    if (items.veggie2?.checked) veggie+=items.veggie2.qty||0;
+    if (items.soup?.checked) veggie+=items.soup.qty||0;
+    if (items.fruit?.checked) fruit+=items.fruit.qty||0;
+    if (items.fruit2?.checked) fruit+=items.fruit2.qty||0;
+    if (items.meat?.checked) meat+=items.meat.qty||0;
+    if (items.meat2?.checked) meat+=items.meat2.qty||0;
+    if (items.egg?.checked) meat+=items.egg.qty||0;
+  }
+  const water = (state.water.records||[]).reduce((s,r)=>s+(r.amount||0),0);
+
+  const cats = [
+    { name:'奶类', unit:'ml', actual:milk, ref:400, refL:'350-500' },
+    { name:'谷物', unit:'碗', actual:grain, ref:1.5, refL:'1-2' },
+    { name:'蔬菜', unit:'份', actual:veggie, ref:2, refL:'1.5-2.5' },
+    { name:'水果', unit:'份', actual:fruit, ref:2, refL:'1-2' },
+    { name:'肉禽蛋', unit:'份', actual:meat, ref:1.5, refL:'1-2' },
+    { name:'饮水', unit:'ml', actual:water, ref:250, refL:'200-300' }
+  ];
+
+  document.getElementById('analysisContent').innerHTML = cats.map(c => {
+    const pct = Math.min(100,Math.round(c.actual/c.ref*100));
+    const cls = pct>=80?'ok':pct>=40?'warn':'bad';
+    return `<div class="analysis-item">
+      <div class="analysis-header"><span class="analysis-name">${c.name}</span><span class="analysis-status ${cls}">${pct>=80?'达标 ✓':pct>=40?'略不足 ⚠':'严重不足 ✗'}</span></div>
+      <div class="analysis-bar"><div class="analysis-fill ${cls}" style="width:${pct}%"></div></div>
+      <div class="analysis-detail">实际 ${c.actual}${c.unit} / 参考 ${c.refL}${c.unit}</div>
+    </div>`;
+  }).join('');
+}
+
+// ========== ALERTS ==========
+function renderAlerts() {
+  const alerts = [];
+  let milk=0,fruit=0,veggie=0,grain=0,meat=0,hasDinnerMeat=false;
+
+  for (const [mid, meal] of Object.entries(state.feeding)) {
+    const items = meal.items||{};
+    if (items.milk?.checked) milk+=items.milk.qty||0;
+    if (items.milk2?.checked) milk+=items.milk2.qty||0;
+    if (items.milk3?.checked) milk+=items.milk3.qty||0;
+    if (items.yogurt?.checked) milk+=items.yogurt.qty||0;
+    if (items.fruit?.checked) fruit+=items.fruit.qty||0;
+    if (items.fruit2?.checked) fruit+=items.fruit2.qty||0;
+    if (items.veggie?.checked) veggie+=items.veggie.qty||0;
+    if (items.veggie2?.checked) veggie+=items.veggie2.qty||0;
+    if (items.soup?.checked) veggie+=items.soup.qty||0;
+    if (items.bread?.checked) grain+=items.bread.qty||0;
+    if (items.porridge?.checked) grain+=items.porridge.qty||0;
+    if (items.rice?.checked) grain+=items.rice.qty||0;
+    if (items.rice2?.checked) grain+=items.rice2.qty||0;
+    if (items.meat?.checked) meat+=items.meat.qty||0;
+    if (items.meat2?.checked) meat+=items.meat2.qty||0;
+    if (items.egg?.checked) meat+=items.egg.qty||0;
+    if (mid==='dinner' && ((items.meat2?.checked&&items.meat2.qty>0)||items.meat?.checked)) hasDinnerMeat=true;
+  }
+
+  if (milk<300) alerts.push({level:'danger',title:'奶量严重不足',desc:`今日 ${milk}ml，参考 350-500ml，还差至少 ${350-milk}ml`});
+  else if (milk<350) alerts.push({level:'warning',title:'奶量略低',desc:`今日 ${milk}ml，参考 350-500ml`});
+  if (fruit===0) alerts.push({level:'danger',title:'今日未摄入水果',desc:'建议上午和下午加餐各安排一份水果'});
+  if (veggie===0) alerts.push({level:'danger',title:'今日未摄入蔬菜',desc:'午晚餐应包含至少一份蔬菜'});
+  if (meat===0) alerts.push({level:'danger',title:'今日未摄入肉禽蛋',desc:'蛋白质对生长发育至关重要'});
+  if (grain>2.5) alerts.push({level:'warning',title:'谷物摄入偏多',desc:`今日 ${grain} 碗，参考 1-2 碗`});
+  if (!hasDinnerMeat && Object.values(state.feeding.dinner?.items||{}).some(i=>i.checked)) {
+    alerts.push({level:'info',title:'晚餐缺少蛋白质',desc:'建议搭配肉/鱼/豆制品'});
+  }
+
+  const to = (state.activity.outdoor_am?state.activity.outdoor_am_min:0)+(state.activity.outdoor_pm?state.activity.outdoor_pm_min:0);
+  if (to===0) alerts.push({level:'danger',title:'今日无户外活动',desc:'建议每天至少 60 分钟户外'});
+  else if (to<60) alerts.push({level:'warning',title:`户外仅 ${to} 分钟`,desc:'参考 60-120 分钟'});
+  if (state.activity.games.length<2) alerts.push({level:'info',title:'亲子互动偏少',desc:`仅 ${state.activity.games.length} 项游戏，建议 3 项以上`});
+
+  const ts = state.sleep.night+state.sleep.nap_am+state.sleep.nap_pm;
+  if (ts>0 && ts<10) alerts.push({level:'warning',title:`睡眠仅 ${ts}h`,desc:'1-2 岁宝宝需要 12-14 小时睡眠'});
+
+  const tw = (state.water.records||[]).reduce((s,r)=>s+(r.amount||0),0);
+  if (tw<150) alerts.push({level:'danger',title:`饮水仅 ${tw}ml`,desc:'参考每天 200-300ml'});
+
+  if (!state.supplements.ad) alerts.push({level:'danger',title:'今日未补充维生素AD',desc:'每天补充 AD 滴剂'});
+  if (!state.supplements.dha) alerts.push({level:'info',title:'今日未补充 DHA',desc:'可考虑每周 2-3 次补充'});
+
+  document.getElementById('alertDot').style.display = alerts.filter(a=>a.level==='danger').length>0?'block':'none';
+
+  document.getElementById('alertsContent').innerHTML = alerts.length===0
+    ? '<div class="no-alerts"><div style="font-size:40px;margin-bottom:8px">🎉</div>今日所有指标均达标，宝宝很棒！</div>'
+    : alerts.map(a => `<div class="alert-item ${a.level}"><div class="alert-title">${a.level==='danger'?'🔴':a.level==='warning'?'🟠':'🔵'} ${a.title}</div><div class="alert-desc">${a.desc}</div></div>`).join('');
+}
+
+// ========== ROOM (Future Multi-User) ==========
+function renderRoomPanel() {
+  const sync = getSyncConfig();
+  const content = document.getElementById('roomContent');
+
+  if (sync.mode === 'server' && sync.url) {
+    content.innerHTML = `
+      <div class="room-code-display">
+        <div class="room-code-label">家庭房间码</div>
+        <div class="room-code-val">${sync.roomCode||'---'}</div>
+      </div>
+      <div class="room-members">
+        <span class="member-chip me">👤 ${sync.nickname||'我'}</span>
+        ${(sync.members||[]).map(m=>`<span class="member-chip">${m}</span>`).join('')}
+      </div>
+      <div class="sync-server-input">
+        <input class="sync-input" type="text" id="serverUrl" placeholder="服务器地址" value="${sync.url}">
+        <button class="room-btn-sm" onclick="connectServer()">连接</button>
+      </div>
+      <div class="room-btns">
+        <button class="room-btn-sm" onclick="switchToLocal()">切换到本机记录</button>
+      </div>`;
+  } else if (sync.mode === 'create') {
+    content.innerHTML = `
+      <div style="text-align:center;margin-bottom:12px">
+        <div style="font-size:13px;color:var(--text2);margin-bottom:4px">创建家庭房间</div>
+        <div class="room-code-val">${sync.tempCode||'------'}</div>
+      </div>
+      <div class="sync-server-input">
+        <input class="sync-input" type="text" id="serverUrl" placeholder="输入服务器地址" value="${sync.url||''}">
+        <button class="room-btn-sm" onclick="connectAndCreate()">创建并连接</button>
+      </div>
+      <div class="room-btns">
+        <button class="room-btn-sm" onclick="switchToLocal()">取消</button>
+      </div>`;
+  } else {
+    content.innerHTML = `
+      <div class="room-hint-text" style="margin-bottom:12px">开启家庭同步后，爷爷奶奶可以一起记录宝宝的喂养数据，所有记录统一分析。</div>
+      <div class="sync-server-input">
+        <input class="sync-input" type="text" id="serverUrl" placeholder="输入服务器地址（如 http://xxx.com:3456）">
+        <button class="room-btn-sm" onclick="showJoinOrCreate()">连接服务器</button>
+      </div>
+      <div class="room-hint-text" style="margin-top:6px;font-size:10px">提示：需要先部署后端服务才能使用多人同步，<br>当前为<b>本机记录模式</b></div>`;
+  }
+}
+
+function getSyncConfig() {
+  try { return JSON.parse(localStorage.getItem('baby_sync')||'{"mode":"local"}'); }
+  catch(e) { return { mode:'local' }; }
+}
+function setSyncConfig(cfg) { localStorage.setItem('baby_sync', JSON.stringify(cfg)); }
+function toggleRoom() {
+  document.getElementById('roomPanel').classList.toggle('show');
+  renderRoomPanel();
+}
+function switchToLocal() {
+  setSyncConfig({ mode:'local' });
+  document.getElementById('syncStatus').innerHTML = '<span class="sync-dot local"></span> 本机记录';
+  document.getElementById('roomBtn').className = 'app-badge offline';
+  document.getElementById('roomBtn').textContent = '👨‍👩‍👧 家庭同步';
+  renderRoomPanel();
+  document.getElementById('roomPanel').classList.remove('show');
+}
+function showJoinOrCreate() {
+  const url = document.getElementById('serverUrl')?.value?.trim();
+  if (!url) { alert('请输入服务器地址'); return; }
+  // Show create/join options
+  const content = document.getElementById('roomContent');
+  content.innerHTML = `
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <button class="room-btn-sm" onclick="goCreate('${url}')" style="flex:1;background:var(--green-l);border-color:var(--green);color:var(--green)">🏠 创建房间</button>
+      <button class="room-btn-sm" onclick="goJoin('${url}')" style="flex:1;background:var(--blue-l);border-color:var(--blue);color:var(--blue)">🔑 加入房间</button>
+    </div>
+    <div class="room-hint-text">创建：生成6位房间码分享给家人<br>加入：输入家人分享的房间码</div>`;
+}
+function goCreate(url) {
+  setSyncConfig({ mode:'create', url, tempCode: String(Math.floor(100000+Math.random()*900000)) });
+  renderRoomPanel();
+}
+async function connectAndCreate() {
+  const url = document.getElementById('serverUrl')?.value?.trim();
+  const cfg = getSyncConfig();
+  if (!url) return;
+  try {
+    const res = await fetch(url+'/api/rooms', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ name:'宝宝', nickname: cfg.nickname||'爸爸' })
+    });
+    const data = await res.json();
+    if (data.error) { alert(data.error); return; }
+    setSyncConfig({
+      mode:'server', url, roomCode: data.room.code, roomId: data.room.id,
+      nickname: data.user.nickname, userId: data.user.id, token: data.user.token, members: []
+    });
+    document.getElementById('syncStatus').innerHTML = '<span class="sync-dot online"></span> 多人同步';
+    document.getElementById('roomBtn').className = 'app-badge';
+    document.getElementById('roomBtn').textContent = '👨‍👩‍👧 房间码: '+data.room.code;
+    renderRoomPanel();
+    alert('房间创建成功！房间码：'+data.room.code+'\n分享给家人即可加入');
+  } catch(e) { alert('连接失败：'+e.message); }
+}
+async function connectServer() {
+  const url = document.getElementById('serverUrl')?.value?.trim();
+  if (!url) return;
+  try {
+    const cfg = getSyncConfig();
+    const res = await fetch(url+'/api/room', {
+      headers: { 'x-auth-token':cfg.token, 'x-user-id':cfg.userId, 'x-room-id':cfg.roomId }
+    });
+    if (!res.ok) { alert('连接失败'); return; }
+    const data = await res.json();
+    setSyncConfig({ ...cfg, url, members: data.users?.map(u=>u.nickname).filter(n=>n!==cfg.nickname)||[] });
+    document.getElementById('syncStatus').innerHTML = '<span class="sync-dot online"></span> 多人同步';
+    renderRoomPanel();
+  } catch(e) { alert('连接失败：'+e.message); }
+}
+function goJoin(url) {
+  const code = prompt('请输入家庭房间码（6位数字）：');
+  if (!code) return;
+  (async () => {
+    try {
+      const nickname = prompt('你的昵称：', '奶奶')||'家人';
+      const res = await fetch(url+'/api/rooms/join', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ code, nickname })
+      });
+      const data = await res.json();
+      if (data.error) { alert(data.error); return; }
+      setSyncConfig({
+        mode:'server', url, roomCode: data.room.code, roomId: data.room.id,
+        nickname: data.user.nickname, userId: data.user.id, token: data.user.token,
+        members: data.members||[]
+      });
+      document.getElementById('syncStatus').innerHTML = '<span class="sync-dot online"></span> 多人同步';
+      document.getElementById('roomBtn').className = 'app-badge';
+      document.getElementById('roomBtn').textContent = '👨‍👩‍👧 房间码: '+data.room.code;
+      renderRoomPanel();
+      alert('加入成功！已和 '+data.members.join('、')+' 一起记录');
+    } catch(e) { alert('加入失败：'+e.message); }
+  })();
+}
+
+// ========== NAVIGATION ==========
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  document.querySelector(`.tab-btn:nth-child(${tab==='record'?1:tab==='analysis'?2:3})`).classList.add('active');
+  document.getElementById('tab'+(tab==='record'?'Record':tab==='analysis'?'Analysis':'Alerts')).classList.add('active');
+  if (tab==='analysis') renderAnalysis();
+  if (tab==='alerts') renderAlerts();
+}
+function toggleSection(id) { document.getElementById(id).classList.toggle('open'); }
+
+// ========== INIT ==========
+document.getElementById('appScreen').style.display = 'block';
+renderAll();
+
+// ========== Sync (if configured) ==========
+(function initSync() {
+  const cfg = getSyncConfig();
+  if (cfg.mode === 'server' && cfg.url) {
+    document.getElementById('syncStatus').innerHTML = '<span class="sync-dot online"></span> 多人同步';
+    document.getElementById('roomBtn').className = 'app-badge';
+    document.getElementById('roomBtn').textContent = '👨‍👩‍👧 '+(cfg.roomCode?('房间码: '+cfg.roomCode):'家庭同步');
+    // Attempt background sync every 30s
+    setInterval(() => {
+      fetch(cfg.url+'/api/room', {
+        headers: { 'x-auth-token':cfg.token, 'x-user-id':cfg.userId, 'x-room-id':cfg.roomId }
+      }).then(r=>r.json()).then(data=>{
+        if (data.users && data.room) {
+          setSyncConfig({ ...cfg, members: data.users.map(u=>u.nickname).filter(n=>n!==cfg.nickname) });
+        }
+      }).catch(()=>{});
+    }, 30000);
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "name": "baby-tracker",
+  "version": "2.0.0",
+  "description": "多人协作婴儿喂养追踪工作台",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}
