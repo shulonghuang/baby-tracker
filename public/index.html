@@ -686,7 +686,7 @@ function renderRoomPanel() {
     content.innerHTML = `
       <div class="room-hint-text" style="margin-bottom:12px">开启家庭同步后，爷爷奶奶可以一起记录宝宝的喂养数据，所有记录统一分析。</div>
       <div class="sync-server-input">
-        <input class="sync-input" type="text" id="serverUrl" placeholder="输入服务器地址（如 http://xxx.com:3456）">
+        <input class="sync-input" type="text" id="serverUrl" placeholder="粘贴后端服务地址（如 https://xxx.onrender.com）">
         <button class="room-btn-sm" onclick="showJoinOrCreate()">连接服务器</button>
       </div>
       <div class="room-hint-text" style="margin-top:6px;font-size:10px">提示：需要先部署后端服务才能使用多人同步，<br>当前为<b>本机记录模式</b></div>`;
@@ -742,7 +742,7 @@ async function connectAndCreate() {
       nickname: data.user.nickname, userId: data.user.id, token: data.user.token, members: []
     });
     document.getElementById('syncStatus').innerHTML = '<span class="sync-dot online"></span> 多人同步';
-    document.getElementById('roomBtn').className = 'app-badge';
+    document.getElementById('roomBtn').className = 'app-badge online';
     document.getElementById('roomBtn').textContent = '👨‍👩‍👧 房间码: '+data.room.code;
     renderRoomPanel();
     alert('房间创建成功！房间码：'+data.room.code+'\n分享给家人即可加入');
@@ -781,7 +781,7 @@ function goJoin(url) {
         members: data.members||[]
       });
       document.getElementById('syncStatus').innerHTML = '<span class="sync-dot online"></span> 多人同步';
-      document.getElementById('roomBtn').className = 'app-badge';
+      document.getElementById('roomBtn').className = 'app-badge online';
       document.getElementById('roomBtn').textContent = '👨‍👩‍👧 房间码: '+data.room.code;
       renderRoomPanel();
       alert('加入成功！已和 '+data.members.join('、')+' 一起记录');
@@ -809,7 +809,7 @@ renderAll();
   const cfg = getSyncConfig();
   if (cfg.mode === 'server' && cfg.url) {
     document.getElementById('syncStatus').innerHTML = '<span class="sync-dot online"></span> 多人同步';
-    document.getElementById('roomBtn').className = 'app-badge';
+    document.getElementById('roomBtn').className = 'app-badge online';
     document.getElementById('roomBtn').textContent = '👨‍👩‍👧 '+(cfg.roomCode?('房间码: '+cfg.roomCode):'家庭同步');
     // Attempt background sync every 30s
     setInterval(() => {
