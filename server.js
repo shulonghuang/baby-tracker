@@ -12,7 +12,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // ========== JSON File Data Store ==========
 
-let store = { rooms: {}, users: {}, records: [] };
+let store = { rooms: {}, users: {}, baby_profiles: {}, records: [] };
 
 function loadStore() {
   if (fs.existsSync(DATA_FILE)) {
@@ -20,10 +20,11 @@ function loadStore() {
       store = JSON.parse(fs.readFileSync(DATA_FILE, 'utf-8'));
       if (!store.rooms) store.rooms = {};
       if (!store.users) store.users = {};
+      if (!store.baby_profiles) store.baby_profiles = {};
       if (!store.records) store.records = [];
     } catch (e) {
       console.error('Failed to load data file, starting fresh:', e.message);
-      store = { rooms: {}, users: {}, records: [] };
+      store = { rooms: {}, users: {}, baby_profiles: {}, records: [] };
     }
   }
 }
@@ -61,6 +62,14 @@ function authMiddleware(req, res, next) {
   next();
 }
 
+// Creator-only middleware
+function creatorOnly(req, res, next) {
+  if (req.user.role !== 'creator') {
+    return res.status(403).json({ error: '仅主账号可修改此设置' });
+  }
+  next();
+}
+
 // ========== API Routes ==========
 
 // Create a family room
@@ -71,22 +80,26 @@ app.post('/api/rooms', (req, res) => {
   const token = generateId();
   let code;
 
-  // Ensure unique code
   do {
     code = generateCode();
   } while (Object.values(store.rooms).some(r => r.code === code));
 
   const now = new Date().toISOString();
-  const roomName = name || '宝宝';
-  const userNickname = nickname || '爸爸';
+  const babyName = name || '宝宝';
 
-  store.rooms[roomId] = { id: roomId, code, name: roomName, created_at: now };
-  store.users[userId] = { id: userId, room_id: roomId, nickname: userNickname, token, created_at: now };
+  store.rooms[roomId] = { id: roomId, code, baby_name: babyName, created_at: now };
+  store.users[userId] = { id: userId, room_id: roomId, nickname: nickname || '爸爸', token, role: 'creator', created_at: now };
+  store.baby_profiles[roomId] = {
+    name: babyName,
+    birthday: '',
+    created_by: userId
+  };
   saveStore();
 
   res.json({
-    room: { id: roomId, code, name: roomName },
-    user: { id: userId, nickname: userNickname, token }
+    room: { id: roomId, code, baby_name: babyName },
+    user: { id: userId, nickname: nickname || '爸爸', token, role: 'creator' },
+    baby: store.baby_profiles[roomId]
   });
 });
 
@@ -100,20 +113,23 @@ app.post('/api/rooms/join', (req, res) => {
 
   const existingMembers = Object.values(store.users)
     .filter(u => u.room_id === room.id)
-    .map(u => u.nickname);
+    .map(u => ({ nickname: u.nickname, role: u.role }));
 
   const userId = generateId();
   const token = generateId();
   const now = new Date().toISOString();
-  const userNickname = nickname || '奶奶';
 
-  store.users[userId] = { id: userId, room_id: room.id, nickname: userNickname, token, created_at: now };
+  store.users[userId] = {
+    id: userId, room_id: room.id, nickname: nickname || '家人',
+    token, role: 'member', created_at: now
+  };
   saveStore();
 
   res.json({
-    room: { id: room.id, code: room.code, name: room.name },
-    user: { id: userId, nickname: userNickname, token },
-    members: existingMembers
+    room: { id: room.id, code: room.code, baby_name: room.baby_name },
+    user: { id: userId, nickname: nickname || '家人', token, role: 'member' },
+    members: existingMembers,
+    baby: store.baby_profiles[room.id] || null
   });
 });
 
@@ -123,11 +139,40 @@ app.get('/api/room', (req, res) => {
     const room = store.rooms[req.roomId];
     const users = Object.values(store.users)
       .filter(u => u.room_id === req.roomId)
-      .map(u => ({ id: u.id, nickname: u.nickname, created_at: u.created_at }));
+      .map(u => ({ id: u.id, nickname: u.nickname, role: u.role, created_at: u.created_at }));
     res.json({
       room,
       users,
-      me: { id: req.user.id, nickname: req.user.nickname }
+      baby: store.baby_profiles[req.roomId] || null,
+      me: { id: req.user.id, nickname: req.user.nickname, role: req.user.role }
+    });
+  });
+});
+
+// Get baby profile
+app.get('/api/baby-profile', (req, res) => {
+  authMiddleware(req, res, () => {
+    const profile = store.baby_profiles[req.roomId] || { name: store.rooms[req.roomId]?.baby_name || '宝宝' };
+    res.json(profile);
+  });
+});
+
+// Update baby profile (creator only)
+app.put('/api/baby-profile', (req, res) => {
+  authMiddleware(req, res, () => {
+    creatorOnly(req, res, () => {
+      const { name, birthday } = req.body || {};
+      if (!store.baby_profiles[req.roomId]) {
+        store.baby_profiles[req.roomId] = { name: '宝宝', birthday: '', created_by: req.user.id };
+      }
+      if (name) {
+        store.baby_profiles[req.roomId].name = name;
+        // Also update room baby_name for backward compat
+        if (store.rooms[req.roomId]) store.rooms[req.roomId].baby_name = name;
+      }
+      if (birthday !== undefined) store.baby_profiles[req.roomId].birthday = birthday;
+      saveStore();
+      res.json(store.baby_profiles[req.roomId]);
     });
   });
 });
@@ -144,7 +189,6 @@ app.get('/api/records/:date', (req, res) => {
         data: typeof r.data === 'string' ? JSON.parse(r.data) : r.data
       }));
 
-    // Enrich with user nicknames
     const enriched = records.map(r => ({
       ...r,
       nickname: store.users[r.user_id]?.nickname || '未知'
@@ -207,6 +251,70 @@ app.post('/api/records', (req, res) => {
   });
 });
 
+// Get feeding patterns for a room (last 14 days, for default suggestions)
+app.get('/api/feeding-patterns', (req, res) => {
+  authMiddleware(req, res, () => {
+    const now = new Date();
+    const fourteenDaysAgo = new Date(now - 14 * 86400000).toISOString().slice(0, 10);
+
+    const feedingRecords = store.records
+      .filter(r => r.room_id === req.roomId && r.section === 'feeding' && r.date >= fourteenDaysAgo)
+      .map(r => ({
+        date: r.date,
+        data: typeof r.data === 'string' ? JSON.parse(r.data) : r.data
+      }));
+
+    // Analyze patterns
+    const patterns = {};
+    for (const record of feedingRecords) {
+      const meals = record.data.meals || {};
+      for (const [mealId, mealData] of Object.entries(meals)) {
+        if (!mealData.time) continue;
+        if (!patterns[mealId]) patterns[mealId] = { times: [], foods: {} };
+        patterns[mealId].times.push(mealData.time);
+
+        // Track food items
+        const items = mealData.items || {};
+        for (const [foodId, foodData] of Object.entries(items)) {
+          if (foodData.checked) {
+            if (!patterns[mealId].foods[foodId]) patterns[mealId].foods[foodId] = { count: 0, totalQty: 0 };
+            patterns[mealId].foods[foodId].count++;
+            patterns[mealId].foods[foodId].totalQty += (foodData.qty || 0);
+          }
+        }
+      }
+    }
+
+    // Calculate averages
+    const suggestions = {};
+    for (const [mealId, p] of Object.entries(patterns)) {
+      // Average time
+      const avgMinutes = Math.round(
+        p.times.reduce((sum, t) => {
+          const [h, m] = t.split(':').map(Number);
+          return sum + h * 60 + m;
+        }, 0) / p.times.length
+      );
+      const avgH = String(Math.floor(avgMinutes / 60)).padStart(2, '0');
+      const avgM = String(avgMinutes % 60).padStart(2, '0');
+
+      // Top foods (sorted by frequency)
+      const topFoods = Object.entries(p.foods)
+        .map(([id, d]) => ({ id, avgQty: Math.round(d.totalQty / d.count), count: d.count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
+
+      suggestions[mealId] = {
+        avgTime: `${avgH}:${avgM}`,
+        count: p.times.length,
+        topFoods
+      };
+    }
+
+    res.json({ suggestions });
+  });
+});
+
 // Get history for charts
 app.get('/api/history', (req, res) => {
   authMiddleware(req, res, () => {
@@ -255,6 +363,16 @@ function mergeRecords(records) {
           if (!existing.meals[meal]) {
             existing.meals[meal] = data.meals[meal];
           } else {
+            // Merge time: use earliest recorded time for the day
+            const existingTime = existing.meals[meal].time;
+            const newTime = data.meals[meal].time;
+            if (existingTime && newTime) {
+              existing.meals[meal].time = existingTime < newTime ? existingTime : newTime;
+            } else if (newTime) {
+              existing.meals[meal].time = newTime;
+            }
+
+            // Merge food items
             for (const item of Object.keys(data.meals[meal].items || {})) {
               if (!existing.meals[meal].items[item]) {
                 existing.meals[meal].items[item] = data.meals[meal].items[item];
