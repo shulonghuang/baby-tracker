@@ -236,6 +236,23 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .trend-bar.low{background:var(--amber)}
 .trend-avg{font-size:11px;color:var(--text2);min-width:52px;text-align:right}
 
+/* Admin Panel */
+.admin-banner{margin:0 16px 12px;background:var(--rose-l);border-radius:var(--radius);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.admin-label{font-size:12px;color:var(--rose);font-weight:600;display:flex;align-items:center;gap:6px}
+.admin-label .admin-dot{width:7px;height:7px;border-radius:50%;background:var(--rose);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.admin-date-input{padding:5px 10px;border:1.5px solid var(--rose);border-radius:8px;font-size:13px;font-family:var(--font);background:#fff;color:var(--text);outline:none;width:140px}
+.admin-date-input:focus{border-color:var(--text)}
+.admin-exit-btn{padding:5px 14px;border-radius:14px;font-size:12px;border:1.5px solid var(--rose);cursor:pointer;background:transparent;color:var(--rose);font-weight:600;font-family:var(--font);transition:.2s;white-space:nowrap}
+.admin-exit-btn:active{background:var(--rose);color:#fff}
+.admin-save-btn{padding:5px 14px;border-radius:14px;font-size:12px;border:none;cursor:pointer;background:var(--rose);color:#fff;font-weight:600;font-family:var(--font);transition:.2s;white-space:nowrap}
+.admin-save-btn:active{opacity:0.85}
+.admin-hint{font-size:11px;color:var(--text2);text-align:center;padding:20px 16px}
+.admin-no-data{text-align:center;padding:12px 16px;font-size:13px;color:var(--text2)}
+.admin-tab-btn{padding:8px;text-align:center;font-size:13px;font-weight:600;border-radius:var(--radius-sm);cursor:pointer;transition:.2s;border:none;background:transparent;color:var(--text2);position:relative;font-family:var(--font)}
+.admin-tab-btn.active{background:var(--card);color:var(--text)}
+.admin-tab-btn .admin-badge{position:absolute;top:2px;right:4px;font-size:9px;background:var(--rose);color:#fff;padding:1px 4px;border-radius:6px}
+
 /* Bowel Movement */
 .bowel-records{margin-bottom:10px}
 .bowel-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--bg)}
@@ -366,6 +383,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     <button class="tab-btn active" onclick="switchTab('record')">打卡</button>
     <button class="tab-btn" onclick="switchTab('analysis')">分析</button>
     <button class="tab-btn" id="alertTabBtn" onclick="switchTab('alerts')">提醒<span class="tab-dot" id="alertDot" style="display:none"></span></button>
+    <button class="admin-tab-btn" id="adminTabBtn" onclick="switchTab('admin')" style="display:none">后台<span class="admin-badge">管理</span></button>
   </div>
 
   <!-- Record Tab -->
@@ -439,6 +457,52 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <!-- Alerts Tab -->
   <div class="tab-content" id="tabAlerts">
     <div class="section" id="alertsContent"></div>
+  </div>
+
+  <!-- Admin Tab -->
+  <div class="tab-content" id="tabAdmin">
+    <!-- Admin banner: shown when editing a historical date -->
+    <div class="admin-banner" id="adminBanner" style="display:none">
+      <div class="admin-label"><span class="admin-dot"></span>正在编辑历史数据</div>
+      <input type="date" class="admin-date-input" id="adminDatePicker" onchange="onAdminDateChange(this.value)">
+      <button class="admin-save-btn" onclick="saveAdminData()">保存修改</button>
+      <button class="admin-exit-btn" onclick="exitAdminMode()">退出后台</button>
+    </div>
+    <!-- Shown when no date is selected -->
+    <div class="admin-hint" id="adminPrompt">
+      <div style="font-size:15px;font-weight:600;margin-bottom:8px;">后台数据管理</div>
+      <div style="margin-bottom:12px;">选择日期，编辑历史打卡记录</div>
+      <input type="date" class="admin-date-input" id="adminDateSelect" onchange="enterAdminMode(this.value)" style="width:160px;text-align:center" value="2026-08-01">
+      <div style="margin-top:4px;font-size:10px;color:var(--text3)">仅主账号可操作</div>
+    </div>
+    <!-- Admin sections container: will be populated by renderAll() in admin mode -->
+    <div id="adminSections" style="display:none">
+      <div class="section open" id="adminSecFeeding">
+        <div class="section-header"><div class="section-title">喂养打卡 <span class="section-chip none" id="adminChipFeeding">未记录</span></div><span class="section-toggle">▼</span></div>
+        <div class="meal-tabs" id="adminMealTabs"></div>
+        <div id="adminMealContent"></div>
+      </div>
+      <div class="section open" id="adminSecActivity">
+        <div class="section-header"><div class="section-title">活动打卡 <span class="section-chip none" id="adminChipActivity">未记录</span></div><span class="section-toggle">▼</span></div>
+        <div class="section-body" id="adminActivityBody"></div>
+      </div>
+      <div class="section open" id="adminSecSleep">
+        <div class="section-header"><div class="section-title">睡眠记录 <span class="section-chip none" id="adminChipSleep">未记录</span></div><span class="section-toggle">▼</span></div>
+        <div class="section-body" id="adminSleepBody"></div>
+      </div>
+      <div class="section open" id="adminSecWater">
+        <div class="section-header"><div class="section-title">饮水记录 <span class="section-chip none" id="adminChipWater">未记录</span></div><span class="section-toggle">▼</span></div>
+        <div class="section-body" id="adminWaterBody"></div>
+      </div>
+      <div class="section open" id="adminSecSupps">
+        <div class="section-header"><div class="section-title">补充剂 <span class="section-chip none" id="adminChipSupps">未记录</span></div><span class="section-toggle">▼</span></div>
+        <div class="section-body" id="adminSuppsBody"></div>
+      </div>
+      <div class="section open" id="adminSecBowel">
+        <div class="section-header"><div class="section-title">便便记录 <span class="section-chip none" id="adminChipBowel">未记录</span></div><span class="section-toggle">▼</span></div>
+        <div class="section-body" id="adminBowelBody"></div>
+      </div>
+    </div>
   </div>
 
   <!-- Toast -->
@@ -741,11 +805,17 @@ function loadData() {
 function saveData(data) {
   let all = {};
   try { all = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch(e) {}
-  all[TODAY] = data;
+  if (adminMode) {
+    all[adminDate] = data;
+  } else {
+    all[TODAY] = data;
+  }
   localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
-  updateFeedingPatterns(data);
+  if (!adminMode) {
+    updateFeedingPatterns(data);
+    scheduleSync();
+  }
   renderAll();
-  scheduleSync();
 }
 
 // ========== SERVER SYNC ==========
@@ -912,9 +982,124 @@ function isCreator() {
   return cfg.role === 'creator';
 }
 
+// ========== ADMIN MODE ==========
+function enterAdminMode(date) {
+  if (!date) return;
+  if (!isCreator()) {
+    toast('仅主账号可编辑历史数据');
+    return;
+  }
+  // Save today's state
+  savedTodayState = JSON.parse(JSON.stringify(state));
+  // Load historical data
+  adminMode = true;
+  adminDate = date;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const all = JSON.parse(raw);
+      if (all[date]) {
+        const data = all[date];
+        // Apply same migrations as loadData
+        for (const m of MEALS) {
+          if (data.feeding && data.feeding[m.id] && !data.feeding[m.id].time) {
+            data.feeding[m.id].time = m.defaultTime;
+          }
+        }
+        if (data.activity && data.activity.confirmed === undefined) data.activity.confirmed = false;
+        if (data.sleep && data.sleep.confirmed === undefined) data.sleep.confirmed = false;
+        if (data.water && data.water.confirmed === undefined) data.water.confirmed = false;
+        if (data.supplements && data.supplements.confirmed === undefined) data.supplements.confirmed = false;
+        if (data.supplements && data.supplements.dha !== undefined && data.supplements.d3 === undefined) {
+          data.supplements.d3 = false;
+          delete data.supplements.dha;
+        }
+        if (data.bowel === undefined) data.bowel = { confirmed:false, records:[] };
+        if (data.activity && Array.isArray(data.activity.games)) {
+          const obj = {};
+          data.activity.games.forEach(id => { obj[id] = 15; });
+          data.activity.games = obj;
+        }
+        state = data;
+      } else {
+        state = defaultData();
+      }
+    } else {
+      state = defaultData();
+    }
+  } catch(e) {
+    state = defaultData();
+  }
+  // Show admin UI
+  document.getElementById('adminPrompt').style.display = 'none';
+  document.getElementById('adminSections').style.display = 'block';
+  document.getElementById('adminBanner').style.display = 'flex';
+  document.getElementById('adminDatePicker').value = date;
+  document.getElementById('adminDateSelect').value = date;
+  renderAll();
+}
+
+function exitAdminMode() {
+  adminMode = false;
+  adminDate = null;
+  if (savedTodayState) {
+    state = savedTodayState;
+    savedTodayState = null;
+  }
+  document.getElementById('adminPrompt').style.display = 'block';
+  document.getElementById('adminSections').style.display = 'none';
+  document.getElementById('adminBanner').style.display = 'none';
+  renderAll();
+  switchTab('record');
+  toast('已退出后台模式');
+}
+
+function onAdminDateChange(date) {
+  if (!date) return;
+  exitAdminMode();
+  // Small delay to reset, then enter new date
+  setTimeout(() => enterAdminMode(date), 50);
+}
+
+function saveAdminData() {
+  if (!adminMode || !adminDate) return;
+  // Save directly to localStorage for the admin date
+  let all = {};
+  try { all = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch(e) {}
+  all[adminDate] = state;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+
+  // Also sync to server
+  const cfg = getSyncConfig();
+  if (cfg.mode === 'server' && cfg.url) {
+    const sections = [
+      { name: 'feeding', data: { meals: state.feeding } },
+      { name: 'activity', data: { confirmed: state.activity.confirmed === true, outdoor_am: state.activity.outdoor_am ? state.activity.outdoor_am_min : 0, outdoor_pm: state.activity.outdoor_pm ? state.activity.outdoor_pm_min : 0, walking: state.activity.walking ? state.activity.walking_min : 0, games: state.activity.games || {} } },
+      { name: 'sleep', data: { confirmed: state.sleep.confirmed === true, night: state.sleep.night || 0, nap_am: state.sleep.nap_am || 0, nap_pm: state.sleep.nap_pm || 0 } },
+      { name: 'water', data: { confirmed: state.water.confirmed === true, records: state.water.records || [] } },
+      { name: 'supplements', data: { confirmed: state.supplements.confirmed === true, ad: state.supplements.ad || false, d3: state.supplements.d3 || false } },
+      { name: 'bowel', data: { confirmed: state.bowel.confirmed === true, records: (state.bowel.records || []).map(r => ({ time: r.time, type: r.type || 'normal', note: r.note || '' })) } }
+    ];
+    for (const sec of sections) {
+      fetch(cfg.url + '/api/records', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-auth-token': cfg.token, 'x-user-id': cfg.userId, 'x-room-id': cfg.roomId },
+        body: JSON.stringify({ date: adminDate, section: sec.name, data: sec.data })
+      }).catch(() => {});
+    }
+  }
+
+  toast(adminDate + ' 数据已保存');
+}
+
 // ========== STATE ==========
 let state = loadData();
 let currentMeal = 'breakfast';
+
+// ========== ADMIN MODE ==========
+let adminMode = false;       // true when editing historical data
+let adminDate = null;        // the date being edited (YYYY-MM-DD)
+let savedTodayState = null;  // backup of today's state when in admin mode
 
 // ========== WEATHER ==========
 const WEATHER_CODES = {
@@ -1219,6 +1404,46 @@ function renderAll() {
   renderAlerts();
   renderRoomPanel();
   updateRoleUI();
+
+  // Admin mode: sync rendered content to admin panel
+  if (adminMode) {
+    syncToAdminPanel();
+  }
+}
+
+function syncToAdminPanel() {
+  // Copy rendered content from record tab to admin panel sections
+  const mappings = [
+    { src: 'mealTabs', dst: 'adminMealTabs' },
+    { src: 'mealContent', dst: 'adminMealContent' },
+    { src: 'activityBody', dst: 'adminActivityBody' },
+    { src: 'sleepBody', dst: 'adminSleepBody' },
+    { src: 'waterBody', dst: 'adminWaterBody' },
+    { src: 'suppsBody', dst: 'adminSuppsBody' },
+    { src: 'bowelBody', dst: 'adminBowelBody' },
+  ];
+  for (const m of mappings) {
+    const src = document.getElementById(m.src);
+    const dst = document.getElementById(m.dst);
+    if (src && dst) dst.innerHTML = src.innerHTML;
+  }
+  // Also sync chip statuses
+  const chipMappings = [
+    { src: 'chipFeeding', dst: 'adminChipFeeding' },
+    { src: 'chipActivity', dst: 'adminChipActivity' },
+    { src: 'chipSleep', dst: 'adminChipSleep' },
+    { src: 'chipWater', dst: 'adminChipWater' },
+    { src: 'chipSupps', dst: 'adminChipSupps' },
+    { src: 'chipBowel', dst: 'adminChipBowel' },
+  ];
+  for (const m of chipMappings) {
+    const src = document.getElementById(m.src);
+    const dst = document.getElementById(m.dst);
+    if (src && dst) {
+      dst.textContent = src.textContent;
+      dst.className = src.className;
+    }
+  }
 }
 
 function updateHeaderTitle() {
@@ -1240,6 +1465,9 @@ function updateRoleUI() {
   const settingsBtn = document.getElementById('settingsBtn');
   // Always show settings button
   settingsBtn.style.display = 'flex';
+  // Show admin tab only to creator
+  const adminBtn = document.getElementById('adminTabBtn');
+  adminBtn.style.display = isCreator() ? 'block' : 'none';
 }
 
 // ========== SETTINGS ==========
@@ -2256,10 +2484,20 @@ function goJoin(url) {
 // ========== NAVIGATION ==========
 function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.admin-tab-btn').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
   if (tab==='record') { document.querySelector('.tab-btn:nth-child(1)').classList.add('active'); document.getElementById('tabRecord').classList.add('active'); }
   else if (tab==='analysis') { document.querySelector('.tab-btn:nth-child(2)').classList.add('active'); document.getElementById('tabAnalysis').classList.add('active'); renderAnalysis(); }
-  else { document.querySelector('.tab-btn:nth-child(3)').classList.add('active'); document.getElementById('tabAlerts').classList.add('active'); renderAlerts(); }
+  else if (tab==='alerts') { document.querySelector('.tab-btn:nth-child(3)').classList.add('active'); document.getElementById('tabAlerts').classList.add('active'); renderAlerts(); }
+  else if (tab==='admin') {
+    document.getElementById('adminTabBtn').classList.add('active');
+    document.getElementById('tabAdmin').classList.add('active');
+    if (!adminMode) {
+      document.getElementById('adminPrompt').style.display = 'block';
+      document.getElementById('adminSections').style.display = 'none';
+      document.getElementById('adminBanner').style.display = 'none';
+    }
+  }
 }
 function toggleSection(id) { document.getElementById(id).classList.toggle('open'); }
 
