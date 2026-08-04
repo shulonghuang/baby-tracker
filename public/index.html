@@ -1031,8 +1031,8 @@ function renderWater() {
       const s = WATER_SLOTS.find(s=>s.id===r.slot) || {};
       const emoji = s.emoji || '💧';
       const label = s.label || '';
-      const adjMinus = confirmed ? '' : 'adjustWaterPending(&quot;' + r.slot + '&quot;,-20)';
-      const adjPlus = confirmed ? '' : 'adjustWaterPending(&quot;' + r.slot + '&quot;,20)';
+      const adjMinus = confirmed ? '' : 'adjustWaterPending(&quot;' + r.slot + '&quot;,-10)';
+      const adjPlus = confirmed ? '' : 'adjustWaterPending(&quot;' + r.slot + '&quot;,10)';
       const disabled = confirmed ? ' disabled' : '';
       const clearBtn = confirmed ? '' : '<button style="background:none;border:none;color:var(--rose);font-size:12px;cursor:pointer" onclick="removeWaterPending(\'' + r.slot + '\')">清除</button>';
       html += '<div class="activity-row"><span>' + emoji + ' ' + label + '</span><div class="food-qty"><button class="food-qty-btn" onclick="' + adjMinus + '"' + disabled + '>−</button><span class="food-qty-val">' + r.amount + '</span><button class="food-qty-btn" onclick="' + adjPlus + '"' + disabled + '>+</button><span class="qty-unit">ml</span></div>' + clearBtn + '</div>';
