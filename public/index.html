@@ -198,6 +198,40 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .growth-advice.warn{background:var(--amber-l);color:var(--text)}
 .growth-advice.bad{background:var(--rose-l);color:var(--text)}
 
+/* Donut chart in analysis */
+.donut-section{display:flex;align-items:center;gap:16px;background:var(--card);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px}
+.donut-wrap{position:relative;flex-shrink:0;width:80px;height:80px}
+.donut-svg{transform:rotate(-90deg)}
+.donut-circle{fill:none;stroke:var(--bg);stroke-width:10}
+.donut-fill{fill:none;stroke:var(--green);stroke-width:10;stroke-linecap:round;transition:stroke-dashoffset 0.6s}
+.donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+.donut-pct{font-size:20px;font-weight:700;color:var(--text);line-height:1}
+.donut-sub{font-size:10px;color:var(--text2);margin-top:1px}
+.donut-info{flex:1;min-width:0}
+.donut-info-title{font-size:13px;font-weight:700;margin-bottom:4px}
+.donut-info-items{font-size:11px;color:var(--text2);line-height:1.7}
+.donut-info-items span.done{color:var(--green)}.donut-info-items span.undone{color:var(--rose)}
+
+/* Daily completion grid */
+.day-grid{display:flex;gap:4px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+.day-cell{flex-shrink:0;width:40px;text-align:center;font-size:10px;padding:6px 2px;border-radius:var(--radius-sm);background:var(--card)}
+.day-cell .day-label{color:var(--text2);margin-bottom:3px;font-weight:600}
+.day-cell .day-date{font-size:9px;color:var(--text3);margin-bottom:3px}
+.day-cell .day-dots{display:flex;gap:2px;justify-content:center;flex-wrap:wrap}
+.day-dot{width:6px;height:6px;border-radius:50%}
+.day-dot.on{background:var(--green)}.day-dot.off{background:var(--border)}
+.day-cell.today{border:1.5px solid var(--green)}
+.day-summary{font-size:11px;color:var(--text2);text-align:center;margin-bottom:12px}
+
+/* Trend mini chart */
+.trend-row{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--card);border-radius:var(--radius-sm);margin-bottom:8px}
+.trend-label{font-size:12px;font-weight:600;min-width:44px;color:var(--text)}
+.trend-bars{display:flex;align-items:flex-end;gap:3px;flex:1;height:36px}
+.trend-bar{flex:1;min-width:10px;border-radius:3px 3px 0 0;background:var(--green);opacity:0.5;transition:.2s}
+.trend-bar.active{opacity:1;background:var(--green)}
+.trend-bar.low{background:var(--amber)}
+.trend-avg{font-size:11px;color:var(--text2);min-width:52px;text-align:right}
+
 /* Analysis - Comprehensive */
 .analysis-dim{margin-bottom:16px}
 .analysis-dim-title{font-size:14px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px;padding:8px 12px;background:var(--bg);border-radius:var(--radius-sm)}
@@ -1539,6 +1573,101 @@ function renderChips() {
   }
 }
 
+// ========== HISTORY & DAILY ACCUMULATION ==========
+function getAllHistory(days = 7) {
+  try {
+    const all = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    const result = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().slice(0, 10);
+      result.push({ date: dateStr, data: all[dateStr] || null });
+    }
+    return result;
+  } catch (e) { return []; }
+}
+
+// Compute section completion for a given day's data
+function getSectionDone(data) {
+  if (!data) return { feeding: 0, activity: 0, sleep: 0, water: 0, supplements: 0 };
+  // feeding: count completed meals / total meals
+  let mealDone = 0;
+  if (data.feeding) {
+    let total = 0, done = 0;
+    for (const m of MEALS) {
+      const meal = data.feeding[m.id];
+      if (meal?.completed) done++;
+      else if (meal && Object.values(meal.items || {}).some(i => i.checked)) done += 0.5;
+      total++;
+    }
+    mealDone = total > 0 ? Math.round(done / total * 100) : 0;
+  }
+  // activity
+  const act = data.activity || {};
+  let actDone = 0, actTotal = 0;
+  if (act.outdoor_am) actDone++;
+  if (act.outdoor_pm) actDone++;
+  if (act.walking) actDone++;
+  if (Object.keys(act.games || {}).length > 0) actDone++;
+  actTotal = 4;
+  let actPct = actTotal > 0 ? Math.round(actDone / actTotal * 100) : 0;
+  if (act.confirmed === true && actDone === 0) actPct = 100; // marked confirmed means intentionally done
+
+  // sleep
+  const sl = data.sleep || {};
+  let slPct = 0;
+  if (sl.confirmed === true) slPct = 100;
+  else if (sl.night > 0 || sl.nap_am > 0 || sl.nap_pm > 0) slPct = 50;
+
+  // water
+  const wt = data.water || {};
+  let wtPct = 0;
+  if (wt.confirmed === true) wtPct = 100;
+  else if ((wt.records || []).length > 0) wtPct = 50;
+
+  // supplements
+  const sup = data.supplements || {};
+  let supPct = 0;
+  if (sup.confirmed === true) supPct = 100;
+  else if (sup.ad || sup.dha) supPct = 50;
+
+  return { feeding: mealDone, activity: actPct, sleep: slPct, water: wtPct, supplements: supPct };
+}
+
+function getTodayCompletion(sections) {
+  const vals = Object.values(sections);
+  if (vals.length === 0) return 0;
+  return Math.round(vals.reduce((s, v) => s + v, 0) / vals.length);
+}
+
+// Extract key metrics from a day's data
+function extractMetrics(data) {
+  if (!data) return { milk: 0, sleep: 0, water: 0, outdoor: 0 };
+  let milk = 0;
+  if (data.feeding) {
+    for (const [mid, meal] of Object.entries(data.feeding)) {
+      for (const [fid, item] of Object.entries(meal.items || {})) {
+        if (item.checked && (fid.startsWith('milk') || fid === 'yogurt')) milk += item.qty || 0;
+      }
+    }
+  }
+  const sl = data.sleep || {};
+  const sleep = (sl.night || 0) + (sl.nap_am || 0) + (sl.nap_pm || 0);
+  const wt = data.water || {};
+  const water = (wt.records || []).reduce((s, r) => s + (r.amount || 0), 0);
+  const act = data.activity || {};
+  const outdoor = (act.outdoor_am ? (act.outdoor_am_min || 0) : 0) + (act.outdoor_pm ? (act.outdoor_pm_min || 0) : 0);
+  return { milk, sleep, water, outdoor };
+}
+
+function renderDonut(pct) {
+  const r = 34, circ = 2 * Math.PI * r;
+  const offset = circ * (1 - pct / 100);
+  const color = pct >= 80 ? 'var(--green)' : pct >= 50 ? 'var(--amber)' : 'var(--rose)';
+  return '<div class="donut-wrap"><svg class="donut-svg" width="80" height="80" viewBox="0 0 80 80"><circle class="donut-circle" cx="40" cy="40" r="' + r + '"/><circle class="donut-fill" cx="40" cy="40" r="' + r + '" stroke="' + color + '" stroke-dasharray="' + circ + '" stroke-dashoffset="' + offset + '"/></svg><div class="donut-center"><div class="donut-pct">' + pct + '%</div><div class="donut-sub">完成度</div></div></div>';
+}
+
 // ========== COMPREHENSIVE ANALYSIS ==========
 function renderAnalysis() {
   const ref = getAgeRef();
@@ -1568,7 +1697,71 @@ function renderAnalysis() {
 
   let html = '';
 
-  // 0. Growth & Development (NEW)
+  // ===== DONUT CHART: Today's completion =====
+  const todaySections = getSectionDone(state);
+  const todayPct = getTodayCompletion(todaySections);
+  const sectionNames = [
+    { key: 'feeding', label: '喂养' },
+    { key: 'activity', label: '活动' },
+    { key: 'sleep', label: '睡眠' },
+    { key: 'water', label: '饮水' },
+    { key: 'supplements', label: '补充剂' }
+  ];
+  html += '<div class="donut-section">';
+  html += renderDonut(todayPct);
+  html += '<div class="donut-info"><div class="donut-info-title">今日数据完成度</div><div class="donut-info-items">';
+  for (const s of sectionNames) {
+    const v = todaySections[s.key];
+    const cls = v >= 100 ? 'done' : v >= 50 ? '' : 'undone';
+    const icon = v >= 100 ? '●' : v >= 50 ? '◐' : '○';
+    html += '<span class="' + cls + '">' + icon + ' ' + s.label + '</span> ';
+  }
+  html += '</div></div></div>';
+
+  // ===== 7-DAY COMPLETION GRID =====
+  const history = getAllHistory(7);
+  html += '<div class="day-grid">';
+  const dotKeys = ['feeding', 'activity', 'sleep', 'water', 'supplements'];
+  for (let i = 0; i < history.length; i++) {
+    const h = history[i];
+    const isToday = h.date === TODAY;
+    const s = getSectionDone(h.data);
+    const d = new Date(h.date);
+    const dateLabel = (d.getMonth() + 1) + '/' + d.getDate();
+    const weekday = ['日', '一', '二', '三', '四', '五', '六'][d.getDay()];
+    html += '<div class="day-cell' + (isToday ? ' today' : '') + '"><div class="day-label">' + weekday + '</div><div class="day-date">' + dateLabel + '</div><div class="day-dots">';
+    for (const k of dotKeys) {
+      html += '<div class="day-dot ' + (s[k] >= 100 ? 'on' : s[k] >= 50 ? 'on' : 'off') + '"></div>';
+    }
+    html += '</div></div>';
+  }
+  html += '</div>';
+
+  // ===== WEEKLY METRICS TREND =====
+  const weekHistory = getAllHistory(7);
+  const weekMetrics = weekHistory.map(h => extractMetrics(h.data));
+  const trendConfigs = [
+    { key: 'milk', label: '奶量', unit: 'ml', max: 800 },
+    { key: 'sleep', label: '睡眠', unit: 'h', max: 14 },
+    { key: 'water', label: '饮水', unit: 'ml', max: 1000 },
+    { key: 'outdoor', label: '户外', unit: 'min', max: 120 }
+  ];
+  for (const tc of trendConfigs) {
+    const vals = weekMetrics.map(m => m[tc.key]);
+    const sum = vals.reduce((a, b) => a + b, 0);
+    const avg = vals.length > 0 ? Math.round(sum / vals.length) : 0;
+    const todayVal = vals[vals.length - 1] || 0;
+    html += '<div class="trend-row"><div class="trend-label">' + tc.label + '</div><div class="trend-bars">';
+    for (let i = 0; i < vals.length; i++) {
+      const isToday = i === vals.length - 1;
+      const h = tc.max > 0 ? Math.max(4, Math.round(vals[i] / tc.max * 36)) : 4;
+      const cls = vals[i] === 0 ? 'low' : (isToday ? 'active' : '');
+      html += '<div class="trend-bar ' + cls + '" style="height:' + h + 'px" title="' + vals[i] + tc.unit + '"></div>';
+    }
+    html += '</div><div class="trend-avg">' + todayVal + tc.unit + ' / 日均 ' + avg + tc.unit + '</div></div>';
+  }
+
+  // 0. Growth & Development
   const profile = getBabyProfile();
   const ageM = profile.birthday ? calcAgeMonths(profile.birthday) : 12;
   const gender = profile.gender || 'boy';
