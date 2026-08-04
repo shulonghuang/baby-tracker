@@ -280,7 +280,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
         <input class="settings-input" type="text" id="setCity" placeholder="例如: 北京">
       </div>
       <div class="settings-hint" id="ageCalc"></div>
-      <button class="settings-btn" onclick="saveSettings()">保存设置</button>
+      <button class="settings-btn" id="saveSettingsBtn" onclick="saveSettings()">保存设置</button>
     </div>
   </div>
 
@@ -834,6 +834,13 @@ function getSyncConfig() {
   catch(e) { return { mode:'local' }; }
 }
 function setSyncConfig(cfg) { localStorage.setItem('baby_sync', JSON.stringify(cfg)); }
+function isCreator() {
+  const cfg = getSyncConfig();
+  // Local mode: always has full permission
+  if (cfg.mode === 'local') return true;
+  // Server mode: only creator can edit
+  return cfg.role === 'creator';
+}
 
 // ========== STATE ==========
 let state = loadData();
@@ -1012,34 +1019,38 @@ function renderMeasurements() {
   const profile = getBabyProfile();
   const m = profile.measurements;
   const nowStr = new Date().toISOString().slice(0, 10);
+  const canEdit = isCreator();
+  const disabled = canEdit ? '' : ' disabled';
 
-  let html = '<div style="font-size:12px;color:var(--text2);margin-bottom:12px">记录安安的身高、体重和脚长，数据将自动与同龄标准进行对比评估。</div>';
+  let html = '<div style="font-size:12px;color:var(--text2);margin-bottom:12px">';
+  html += canEdit ? '记录安安的身高、体重和脚长，数据将自动与同龄标准进行对比评估。' : '👑 仅主账号可更新安安的生长发育数据';
+  html += '</div>';
 
   // Height
   html += '<div class="measure-input-row">';
   html += '<div class="measure-label"><span class="measure-icon">📏</span> 身高</div>';
   html += '<div class="measure-field">';
-  html += '<input type="number" id="measHeight" value="' + (m.height?.value || '') + '" placeholder="cm" min="40" max="130" step="0.1">';
+  html += '<input type="number" id="measHeight" value="' + (m.height?.value || '') + '" placeholder="cm" min="40" max="130" step="0.1"' + disabled + '>';
   html += '<span class="m-unit">cm</span>';
-  html += '<input type="date" class="measure-date-input" id="measHeightDate" value="' + (m.height?.date || nowStr) + '">';
+  html += '<input type="date" class="measure-date-input" id="measHeightDate" value="' + (m.height?.date || nowStr) + '"' + disabled + '>';
   html += '</div></div>';
 
   // Weight
   html += '<div class="measure-input-row">';
   html += '<div class="measure-label"><span class="measure-icon">⚖️</span> 体重</div>';
   html += '<div class="measure-field">';
-  html += '<input type="number" id="measWeight" value="' + (m.weight?.value || '') + '" placeholder="kg" min="2" max="30" step="0.1">';
+  html += '<input type="number" id="measWeight" value="' + (m.weight?.value || '') + '" placeholder="kg" min="2" max="30" step="0.1"' + disabled + '>';
   html += '<span class="m-unit">kg</span>';
-  html += '<input type="date" class="measure-date-input" id="measWeightDate" value="' + (m.weight?.date || nowStr) + '">';
+  html += '<input type="date" class="measure-date-input" id="measWeightDate" value="' + (m.weight?.date || nowStr) + '"' + disabled + '>';
   html += '</div></div>';
 
   // Foot length
   html += '<div class="measure-input-row">';
   html += '<div class="measure-label"><span class="measure-icon">👣</span> 脚长</div>';
   html += '<div class="measure-field">';
-  html += '<input type="number" id="measFoot" value="' + (m.foot?.value || '') + '" placeholder="cm" min="7" max="25" step="0.1">';
+  html += '<input type="number" id="measFoot" value="' + (m.foot?.value || '') + '" placeholder="cm" min="7" max="25" step="0.1"' + disabled + '>';
   html += '<span class="m-unit">cm</span>';
-  html += '<input type="date" class="measure-date-input" id="measFootDate" value="' + (m.foot?.date || nowStr) + '">';
+  html += '<input type="date" class="measure-date-input" id="measFootDate" value="' + (m.foot?.date || nowStr) + '"' + disabled + '>';
   html += '</div></div>';
 
   // History
@@ -1056,13 +1067,19 @@ function renderMeasurements() {
     html += '</div>';
   }
 
-  html += '<div class="confirm-row"><button class="confirm-btn" onclick="saveMeasurements()">💾 保存数据</button></div>';
-  html += '<div class="confirm-hint">保存后数据将显示在顶部，并与同龄标准自动对比</div>';
+  if (canEdit) {
+    html += '<div class="confirm-row"><button class="confirm-btn" onclick="saveMeasurements()">💾 保存数据</button></div>';
+    html += '<div class="confirm-hint">保存后数据将显示在顶部，并与同龄标准自动对比</div>';
+  }
 
   document.getElementById('measureBody').innerHTML = html;
 }
 
 function saveMeasurements() {
+  if (!isCreator()) {
+    toast('仅主账号可更新生长发育数据');
+    return;
+  }
   const profile = getBabyProfile();
   const nowStr = new Date().toISOString().slice(0, 10);
 
@@ -1157,11 +1174,24 @@ function updateRoleUI() {
 // ========== SETTINGS ==========
 function openSettings() {
   const profile = getBabyProfile();
+  const canEdit = isCreator();
   document.getElementById('setBabyName').value = profile.name || '';
   document.getElementById('setBirthday').value = profile.birthday || '';
   document.getElementById('setGender').value = profile.gender || 'boy';
   document.getElementById('setCity').value = profile.city || '';
-  updateAgeCalc();
+  // Read-only for non-creator family members
+  document.getElementById('setBabyName').disabled = !canEdit;
+  document.getElementById('setBirthday').disabled = !canEdit;
+  document.getElementById('setGender').disabled = !canEdit;
+  document.getElementById('setCity').disabled = !canEdit;
+  const saveBtn = document.getElementById('saveSettingsBtn');
+  if (!canEdit) {
+    saveBtn.style.display = 'none';
+    document.getElementById('ageCalc').textContent = '👑 仅主账号可修改宝宝信息和城市';
+  } else {
+    saveBtn.style.display = '';
+    updateAgeCalc();
+  }
   document.getElementById('settingsOverlay').classList.add('show');
   document.getElementById('setBirthday').onchange = updateAgeCalc;
 }
@@ -1178,6 +1208,10 @@ function updateAgeCalc() {
 }
 
 function saveSettings() {
+  if (!isCreator()) {
+    toast('仅主账号可修改宝宝信息');
+    return;
+  }
   const name = document.getElementById('setBabyName').value.trim() || '安安';
   const birthday = document.getElementById('setBirthday').value;
   const gender = document.getElementById('setGender').value;
