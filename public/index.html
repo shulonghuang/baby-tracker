@@ -4,19 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#8AAA94">
-<!-- iOS PWA -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="宝宝喂养追踪">
+<meta name="apple-mobile-web-app-title" content="安安喂养">
 <link rel="apple-touch-icon" href="/icon-192.png">
-<!-- Android / Chrome PWA -->
 <link rel="manifest" href="/manifest.json">
 <link rel="icon" type="image/png" href="/icon-192.png">
-<title id="pageTitle">宝宝喂养追踪</title>
+<title id="pageTitle">安安喂养</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#F9F8F6;--card:#FFFFFF;--text:#3C3A37;--text2:#7A7672;
+  --bg:#F9F8F6;--card:#FFFFFF;--text:#3C3A37;--text2:#7A7672;--text3:#A49F99;
   --green:#8AAA94;--green-l:#EAF2EC;--amber:#D4A96A;--amber-l:#FDF6EB;
   --rose:#C4877A;--rose-l:#F9EDEA;--blue:#8AADB8;--blue-l:#EDF4F6;
   --border:#E8E5DF;--radius:14px;--radius-sm:10px;
@@ -34,6 +32,35 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .app-badge.creator{background:var(--blue-l);color:var(--blue)}
 .app-badge.offline{background:var(--amber-l);color:var(--amber)}
 .app-badge.online{background:var(--green-l);color:var(--green)}
+
+/* Weather Banner */
+.weather-banner{margin:0 16px 12px;background:linear-gradient(135deg,#E8F0FE,#F0F7F4);border-radius:var(--radius);padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,0.03)}
+.weather-row{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.weather-date{font-size:16px;font-weight:700;color:var(--text)}
+.weather-date .wkday{font-size:12px;font-weight:400;color:var(--text2);margin-left:6px}
+.weather-desc{font-size:28px}
+.weather-temp{font-size:14px;font-weight:600;color:var(--text)}
+.weather-detail{display:flex;gap:16px;font-size:11px;color:var(--text2);flex-wrap:wrap}
+.weather-detail .uv-tag{padding:2px 8px;border-radius:10px;font-weight:600;font-size:11px}
+.uv-low{background:#E8F5E9;color:#2E7D32}
+.uv-moderate{background:#FFF8E1;color:#F9A825}
+.uv-high{background:#FFF3E0;color:#E65100}
+.uv-very-high{background:#FCE4EC;color:#C62828}
+.uv-extreme{background:#EDE7F6;color:#4A148C}
+.uv-loading{background:var(--border);color:var(--text2)}
+
+/* Growth Banner */
+.growth-banner{margin:0 16px 12px;background:var(--card);border-radius:var(--radius);padding:12px 16px;box-shadow:0 1px 4px rgba(0,0,0,0.03);display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.growth-item{display:flex;flex-direction:column;align-items:center;min-width:56px}
+.growth-item .g-icon{font-size:16px;margin-bottom:2px}
+.growth-item .g-val{font-size:15px;font-weight:700;color:var(--text)}
+.growth-item .g-unit{font-size:10px;color:var(--text2)}
+.growth-item .g-status{font-size:9px;padding:1px 6px;border-radius:8px;margin-top:2px;font-weight:600}
+.g-status.ok{background:var(--green-l);color:var(--green)}
+.g-status.warn{background:var(--amber-l);color:var(--amber)}
+.g-status.bad{background:var(--rose-l);color:var(--rose)}
+.growth-date{font-size:10px;color:var(--text3);text-align:center;width:100%;margin-top:4px}
+.growth-empty{font-size:12px;color:var(--text2);text-align:center;padding:8px 0;width:100%}
 
 /* Room Panel */
 .room-panel{display:none;background:var(--card);margin:0 16px 12px;border-radius:var(--radius);padding:16px;box-shadow:0 1px 6px rgba(0,0,0,0.03)}
@@ -53,15 +80,17 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .sync-input{flex:1;padding:8px 12px;border:1.5px solid var(--border);border-radius:20px;font-size:12px;outline:none;background:var(--bg);font-family:var(--font)}
 
 /* Settings Panel */
-.settings-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.3);z-index:100;align-items:center;justify-content:center}
+.settings-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.3);z-index:100;align-items:center;justify-content:center;overflow-y:auto}
 .settings-overlay.show{display:flex}
-.settings-panel{background:var(--card);border-radius:var(--radius);padding:24px;width:calc(100% - 40px);max-width:400px;box-shadow:0 8px 30px rgba(0,0,0,0.12)}
+.settings-panel{background:var(--card);border-radius:var(--radius);padding:24px;width:calc(100% - 40px);max-width:400px;box-shadow:0 8px 30px rgba(0,0,0,0.12);max-height:90vh;overflow-y:auto}
 .settings-title{font-size:17px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between}
 .settings-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2)}
 .settings-field{margin-bottom:16px}
 .settings-label{font-size:12px;color:var(--text2);font-weight:600;margin-bottom:6px}
 .settings-input{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;outline:none;font-family:var(--font);background:var(--bg)}
 .settings-input:focus{border-color:var(--green)}
+.settings-select{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;outline:none;font-family:var(--font);background:var(--bg);color:var(--text);appearance:auto}
+.settings-select:focus{border-color:var(--green)}
 .settings-btn{width:100%;padding:12px;border-radius:var(--radius-sm);font-size:15px;font-weight:700;cursor:pointer;border:none;background:var(--green);color:#fff;font-family:var(--font);margin-top:8px}
 .settings-btn:active{opacity:0.85}
 .settings-hint{font-size:11px;color:var(--text2);text-align:center;margin-top:8px}
@@ -110,7 +139,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .food-left{display:flex;align-items:center;gap:10px;flex:1;cursor:pointer;min-width:0}
 .food-check{width:20px;height:20px;border-radius:6px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;transition:.2s;flex-shrink:0}
 .food-check.checked{background:var(--green);border-color:var(--green)}
-.food-check.checked::after{content:'✓';color:#fff;font-size:12px;font-weight:700}
+.food-check.checked::after{content:'\2713';color:#fff;font-size:12px;font-weight:700}
 .food-name{font-size:14px}
 .food-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
 .food-qty{display:flex;align-items:center;gap:6px;min-width:60px;justify-content:flex-end}
@@ -139,7 +168,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .activity-row:last-child,.sleep-row:last-child{border-bottom:none}
 .act-check{width:20px;height:20px;border-radius:6px;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.2s}
 .act-check.checked{background:var(--green);border-color:var(--green)}
-.act-check.checked::after{content:'✓';color:#fff;font-size:12px;font-weight:700}
+.act-check.checked::after{content:'\2713';color:#fff;font-size:12px;font-weight:700}
 .act-label{font-size:14px;display:flex;align-items:center;gap:6px}
 
 /* Games */
@@ -154,6 +183,25 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .water-slot{padding:8px 12px;border-radius:20px;font-size:12px;border:1.5px solid var(--border);cursor:pointer;transition:.2s;display:flex;align-items:center;gap:4px}
 .water-slot.recorded{background:var(--green-l);border-color:var(--green)}
 .water-slot .slot-amount{font-weight:600;margin-left:4px}
+
+/* Measurement Section */
+.measure-input-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--bg)}
+.measure-input-row:last-child{border-bottom:none}
+.measure-label{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600}
+.measure-icon{font-size:20px}
+.measure-field{display:flex;align-items:center;gap:4px}
+.measure-field input{width:60px;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;text-align:center;font-family:var(--font);background:var(--bg)}
+.measure-field input:focus{border-color:var(--green);outline:none}
+.measure-field .m-unit{font-size:12px;color:var(--text2);min-width:24px}
+.measure-date-input{width:130px;padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-family:var(--font);background:var(--bg);margin-left:8px}
+.measure-history{font-size:11px;color:var(--text2);margin-top:8px;padding:8px;background:var(--bg);border-radius:var(--radius-sm)}
+.measure-history-row{display:flex;justify-content:space-between;padding:3px 0}
+
+/* Growth Analysis in Analysis Tab */
+.growth-advice{padding:12px;border-radius:var(--radius-sm);margin-top:8px;font-size:12px;line-height:1.6}
+.growth-advice.ok{background:var(--green-l);color:var(--text)}
+.growth-advice.warn{background:var(--amber-l);color:var(--text)}
+.growth-advice.bad{background:var(--rose-l);color:var(--text)}
 
 /* Analysis - Comprehensive */
 .analysis-dim{margin-bottom:16px}
@@ -200,10 +248,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
   <!-- Header -->
   <div class="app-header">
-    <div class="app-title" id="headerTitle">🍼 <span id="babyNameDisplay">宝宝</span><span class="age-tag" id="ageTag" style="display:none"></span></div>
+    <div class="app-title" id="headerTitle">🍼 <span id="babyNameDisplay">安安</span>喂养<span class="age-tag" id="ageTag" style="display:none"></span></div>
     <div class="app-right">
       <span class="sync-text" id="syncStatus"><span class="sync-dot local"></span> 本机</span>
-      <button class="icon-btn" id="settingsBtn" style="display:none" onclick="openSettings()" title="宝宝设置">⚙️</button>
+      <button class="icon-btn" id="settingsBtn" style="display:none" onclick="openSettings()" title="设置">⚙️</button>
       <button class="app-badge offline" id="roomBtn" onclick="toggleRoom()">👨‍👩‍👧 同步</button>
     </div>
   </div>
@@ -211,7 +259,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <!-- Settings Overlay -->
   <div class="settings-overlay" id="settingsOverlay">
     <div class="settings-panel">
-      <div class="settings-title">⚙️ 宝宝设置 <button class="settings-close" onclick="closeSettings()">✕</button></div>
+      <div class="settings-title">⚙️ 设置 <button class="settings-close" onclick="closeSettings()">✕</button></div>
       <div class="settings-field">
         <div class="settings-label">宝宝名字</div>
         <input class="settings-input" type="text" id="setBabyName" placeholder="输入宝宝的名字">
@@ -219,6 +267,17 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       <div class="settings-field">
         <div class="settings-label">出生日期</div>
         <input class="settings-input" type="date" id="setBirthday">
+      </div>
+      <div class="settings-field">
+        <div class="settings-label">性别（用于生长发育评估）</div>
+        <select class="settings-select" id="setGender">
+          <option value="boy">👦 男宝宝</option>
+          <option value="girl">👧 女宝宝</option>
+        </select>
+      </div>
+      <div class="settings-field">
+        <div class="settings-label">所在城市（用于天气）</div>
+        <input class="settings-input" type="text" id="setCity" placeholder="例如: 北京">
       </div>
       <div class="settings-hint" id="ageCalc"></div>
       <button class="settings-btn" onclick="saveSettings()">保存设置</button>
@@ -229,6 +288,19 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <div class="room-panel" id="roomPanel">
     <div id="roomContent"></div>
   </div>
+
+  <!-- Weather Banner -->
+  <div class="weather-banner" id="weatherBanner">
+    <div class="weather-row">
+      <span class="weather-date" id="weatherDate"></span>
+      <span class="weather-desc" id="weatherIcon">--</span>
+      <span class="weather-temp" id="weatherTemp">加载中...</span>
+    </div>
+    <div class="weather-detail" id="weatherDetail"></div>
+  </div>
+
+  <!-- Growth Banner -->
+  <div class="growth-banner" id="growthBanner"></div>
 
   <!-- Summary -->
   <div class="summary-row">
@@ -241,7 +313,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <!-- Tabs -->
   <div class="tab-bar">
     <button class="tab-btn active" onclick="switchTab('record')">📝 打卡</button>
-    <button class="tab-btn" onclick="switchTab('analysis')">📊 对比</button>
+    <button class="tab-btn" onclick="switchTab('analysis')">📊 分析</button>
     <button class="tab-btn" id="alertTabBtn" onclick="switchTab('alerts')">🔔 提醒<span class="tab-dot" id="alertDot" style="display:none"></span></button>
   </div>
 
@@ -288,6 +360,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
         <span class="section-toggle">▼</span>
       </div>
       <div class="section-body" id="suppsBody"></div>
+    </div>
+
+    <!-- Measurement Section (at bottom of record tab) -->
+    <div class="section" id="secMeasure">
+      <div class="section-header" onclick="toggleSection('secMeasure')">
+        <div class="section-title">📏 安安的生长发育 <span class="section-chip" id="chipMeasure" style="display:none"></span></div>
+        <span class="section-toggle">▼</span>
+      </div>
+      <div class="section-body" id="measureBody"></div>
     </div>
   </div>
 
@@ -406,6 +487,108 @@ const AGE_REFERENCES = {
   }
 };
 
+// ========== WHO GROWTH STANDARDS (China adopted) ==========
+// Height/Length (cm) and Weight (kg): P3 / P50 / P97
+const GROWTH_STANDARDS = {
+  height_boys: {
+    0:{p3:46.1,p50:50.4,p97:54.7},1:{p3:50.8,p50:54.7,p97:58.6},2:{p3:54.4,p50:58.4,p97:62.4},
+    3:{p3:57.3,p50:61.4,p97:65.5},4:{p3:59.7,p50:63.9,p97:68.0},5:{p3:61.7,p50:65.9,p97:70.1},
+    6:{p3:63.3,p50:67.6,p97:71.9},7:{p3:64.8,p50:69.2,p97:73.5},8:{p3:66.2,p50:70.6,p97:75.0},
+    9:{p3:67.5,p50:72.0,p97:76.5},10:{p3:68.7,p50:73.3,p97:77.9},11:{p3:69.9,p50:74.5,p97:79.2},
+    12:{p3:71.0,p50:75.7,p97:80.5},15:{p3:74.1,p50:79.1,p97:84.2},18:{p3:76.9,p50:82.3,p97:87.7},
+    21:{p3:79.4,p50:85.1,p97:90.9},24:{p3:81.7,p50:87.8,p97:94.0},27:{p3:83.8,p50:90.3,p97:96.8},
+    30:{p3:85.7,p50:92.6,p97:99.5},33:{p3:87.5,p50:94.8,p97:102.0},36:{p3:89.2,p50:96.8,p97:104.4},
+    42:{p3:92.4,p50:100.5,p97:108.7},48:{p3:95.4,p50:103.9,p97:112.7},54:{p3:98.3,p50:107.2,p97:116.5},
+    60:{p3:101.1,p50:110.3,p97:120.0},66:{p3:103.8,p50:113.3,p97:123.4},72:{p3:106.4,p50:116.2,p97:126.6}
+  },
+  height_girls: {
+    0:{p3:45.4,p50:49.1,p97:53.7},1:{p3:49.8,p50:53.7,p97:57.6},2:{p3:53.0,p50:57.1,p97:61.1},
+    3:{p3:55.6,p50:59.8,p97:64.0},4:{p3:57.8,p50:62.1,p97:66.4},5:{p3:59.6,p50:64.0,p97:68.5},
+    6:{p3:61.2,p50:65.7,p97:70.3},7:{p3:62.7,p50:67.3,p97:72.0},8:{p3:64.0,p50:68.7,p97:73.6},
+    9:{p3:65.3,p50:70.1,p97:75.2},10:{p3:66.5,p50:71.5,p97:76.7},11:{p3:67.7,p50:72.8,p97:78.1},
+    12:{p3:68.9,p50:74.0,p97:79.6},15:{p3:72.2,p50:77.5,p97:83.4},18:{p3:75.2,p50:80.7,p97:86.9},
+    21:{p3:77.8,p50:83.7,p97:90.2},24:{p3:80.2,p50:86.4,p97:93.2},27:{p3:82.4,p50:88.9,p97:96.0},
+    30:{p3:84.5,p50:91.3,p97:98.6},33:{p3:86.5,p50:93.6,p97:101.1},36:{p3:88.4,p50:95.7,p97:103.5},
+    42:{p3:91.8,p50:99.6,p97:107.8},48:{p3:94.9,p50:103.2,p97:111.8},54:{p3:97.9,p50:106.5,p97:115.5},
+    60:{p3:100.7,p50:109.7,p97:119.0},66:{p3:103.4,p50:112.7,p97:122.3},72:{p3:106.0,p50:115.5,p97:125.4}
+  },
+  weight_boys: {
+    0:{p3:2.5,p50:3.3,p97:4.4},1:{p3:3.4,p50:4.5,p97:5.8},2:{p3:4.3,p50:5.6,p97:7.1},
+    3:{p3:5.0,p50:6.4,p97:8.0},4:{p3:5.6,p50:7.0,p97:8.7},5:{p3:6.0,p50:7.5,p97:9.3},
+    6:{p3:6.4,p50:7.9,p97:9.8},7:{p3:6.7,p50:8.3,p97:10.3},8:{p3:6.9,p50:8.6,p97:10.7},
+    9:{p3:7.2,p50:8.9,p97:11.0},10:{p3:7.4,p50:9.2,p97:11.4},11:{p3:7.6,p50:9.4,p97:11.7},
+    12:{p3:7.7,p50:9.6,p97:12.0},15:{p3:8.3,p50:10.3,p97:12.8},18:{p3:8.8,p50:10.9,p97:13.7},
+    21:{p3:9.2,p50:11.5,p97:14.5},24:{p3:9.7,p50:12.2,p97:15.3},27:{p3:10.1,p50:12.7,p97:16.1},
+    30:{p3:10.5,p50:13.3,p97:16.9},33:{p3:10.8,p50:13.8,p97:17.6},36:{p3:11.2,p50:14.3,p97:18.4},
+    42:{p3:11.9,p50:15.3,p97:19.7},48:{p3:12.5,p50:16.2,p97:21.0},54:{p3:13.2,p50:17.1,p97:22.3},
+    60:{p3:13.8,p50:17.9,p97:23.6},66:{p3:14.4,p50:18.8,p97:24.8},72:{p3:15.1,p50:19.7,p97:26.1}
+  },
+  weight_girls: {
+    0:{p3:2.4,p50:3.2,p97:4.2},1:{p3:3.2,p50:4.2,p97:5.5},2:{p3:3.9,p50:5.1,p97:6.6},
+    3:{p3:4.5,p50:5.8,p97:7.5},4:{p3:5.0,p50:6.4,p97:8.2},5:{p3:5.4,p50:6.9,p97:8.8},
+    6:{p3:5.7,p50:7.3,p97:9.3},7:{p3:6.0,p50:7.6,p97:9.8},8:{p3:6.3,p50:8.0,p97:10.2},
+    9:{p3:6.5,p50:8.2,p97:10.5},10:{p3:6.7,p50:8.5,p97:10.9},11:{p3:6.9,p50:8.7,p97:11.2},
+    12:{p3:7.0,p50:8.9,p97:11.5},15:{p3:7.6,p50:9.6,p97:12.4},18:{p3:8.1,p50:10.2,p97:13.2},
+    21:{p3:8.6,p50:10.9,p97:14.0},24:{p3:9.0,p50:11.5,p97:14.8},27:{p3:9.4,p50:12.0,p97:15.6},
+    30:{p3:9.8,p50:12.6,p97:16.4},33:{p3:10.1,p50:13.1,p97:17.1},36:{p3:10.5,p50:13.6,p97:17.9},
+    42:{p3:11.2,p50:14.6,p97:19.3},48:{p3:11.9,p50:15.5,p97:20.7},54:{p3:12.6,p50:16.5,p97:22.0},
+    60:{p3:13.3,p50:17.4,p97:23.4},66:{p3:13.9,p50:18.3,p97:24.8},72:{p3:14.6,p50:19.3,p97:26.2}
+  }
+};
+
+// Foot length reference by age (cm) - approximate averages
+const FOOT_REFERENCES = {
+  0:{p50:7.5},1:{p50:8.5},2:{p50:9.0},3:{p50:9.5},4:{p50:10.0},5:{p50:10.5},
+  6:{p50:11.0},7:{p50:11.3},8:{p50:11.5},9:{p50:11.8},10:{p50:12.0},11:{p50:12.3},
+  12:{p50:12.5},15:{p50:13.0},18:{p50:13.5},21:{p50:14.0},24:{p50:14.5},
+  27:{p50:15.0},30:{p50:15.5},33:{p50:16.0},36:{p50:16.5},
+  42:{p50:17.0},48:{p50:17.5},54:{p50:18.0},60:{p50:18.5},66:{p50:19.0},72:{p50:19.5}
+};
+
+function getGrowthRef(gender, type, ageMonths) {
+  const key = type + '_' + gender;
+  const data = GROWTH_STANDARDS[key];
+  if (!data) return null;
+  const months = Object.keys(data).map(Number).sort((a,b)=>a-b);
+  let lo = months[0], hi = months[months.length-1];
+  for (const m of months) {
+    if (m <= ageMonths) lo = m;
+    if (m >= ageMonths && hi === months[months.length-1]) { hi = m; break; }
+  }
+  if (lo === hi) return { ...data[lo], month: lo };
+  // Interpolate
+  const dLo = data[lo], dHi = data[hi];
+  const ratio = (ageMonths - lo) / (hi - lo);
+  return {
+    p3: Math.round((dLo.p3 + (dHi.p3 - dLo.p3) * ratio) * 10) / 10,
+    p50: Math.round((dLo.p50 + (dHi.p50 - dLo.p50) * ratio) * 10) / 10,
+    p97: Math.round((dLo.p97 + (dHi.p97 - dLo.p97) * ratio) * 10) / 10,
+    month: ageMonths
+  };
+}
+
+function getFootRef(ageMonths) {
+  const months = Object.keys(FOOT_REFERENCES).map(Number).sort((a,b)=>a-b);
+  let lo = months[0], hi = months[months.length-1];
+  for (const m of months) {
+    if (m <= ageMonths) lo = m;
+    if (m >= ageMonths && hi === months[months.length-1]) { hi = m; break; }
+  }
+  if (lo === hi) return FOOT_REFERENCES[lo].p50;
+  const ratio = (ageMonths - lo) / (hi - lo);
+  return Math.round((FOOT_REFERENCES[lo].p50 + (FOOT_REFERENCES[hi].p50 - FOOT_REFERENCES[lo].p50) * ratio) * 10) / 10;
+}
+
+function evaluateGrowth(actual, standard) {
+  if (!standard || !actual) return null;
+  const pct = actual / standard.p50;
+  if (actual < standard.p3) return { level: 'bad', label: '偏低 ⚠', pct, desc: '低于同龄第3百分位，建议咨询医生' };
+  if (actual < standard.p50 * 0.95) return { level: 'warn', label: '略低', pct, desc: '低于同龄平均水平，注意营养和睡眠' };
+  if (actual > standard.p97) return { level: 'warn', label: '偏高', pct, desc: '高于同龄第97百分位，注意均衡饮食' };
+  if (actual > standard.p50 * 0.95 && actual <= standard.p50 * 1.05) return { level: 'ok', label: '标准 ✓', pct, desc: '处于同龄平均水平，发育良好' };
+  return { level: 'ok', label: '正常 ✓', pct, desc: '在同龄正常范围内' };
+}
+
 function getAgeRef() {
   const profile = getBabyProfile();
   if (!profile.birthday) return AGE_REFERENCES['12-18'];
@@ -457,9 +640,10 @@ function defaultData() {
 }
 
 // ========== STORAGE ==========
-const STORAGE_KEY = 'baby_tracker_v4';
+const STORAGE_KEY = 'baby_tracker_v5';
 const PATTERN_KEY = 'baby_patterns_v1';
-const PROFILE_KEY = 'baby_profile_v1';
+const PROFILE_KEY = 'baby_profile_v2';
+const WEATHER_CACHE_KEY = 'weather_cache_v1';
 
 function loadData() {
   try {
@@ -467,19 +651,16 @@ function loadData() {
     if (raw) {
       const all = JSON.parse(raw);
       if (all[TODAY]) {
-        // Ensure time field exists
         const data = all[TODAY];
         for (const m of MEALS) {
           if (data.feeding && data.feeding[m.id] && !data.feeding[m.id].time) {
             data.feeding[m.id].time = m.defaultTime;
           }
         }
-        // Migrate: ensure confirmed flags exist on all sections
         if (data.activity && data.activity.confirmed === undefined) data.activity.confirmed = false;
         if (data.sleep && data.sleep.confirmed === undefined) data.sleep.confirmed = false;
         if (data.water && data.water.confirmed === undefined) data.water.confirmed = false;
         if (data.supplements && data.supplements.confirmed === undefined) data.supplements.confirmed = false;
-        // Migrate: games from array to object
         if (data.activity && Array.isArray(data.activity.games)) {
           const obj = {};
           data.activity.games.forEach(id => { obj[id] = 15; });
@@ -497,13 +678,8 @@ function saveData(data) {
   try { all = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch(e) {}
   all[TODAY] = data;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
-
-  // Update patterns from today's recording
   updateFeedingPatterns(data);
-
   renderAll();
-
-  // Sync to server if in sync mode (debounced)
   scheduleSync();
 }
 
@@ -520,44 +696,17 @@ function scheduleSync() {
 function syncToServer() {
   const cfg = getSyncConfig();
   if (cfg.mode !== 'server' || !cfg.url) return;
-
   const sections = [
     { name: 'feeding', data: { meals: state.feeding } },
-    { name: 'activity', data: {
-        confirmed: state.activity.confirmed === true,
-        outdoor_am: state.activity.outdoor_am ? state.activity.outdoor_am_min : 0,
-        outdoor_pm: state.activity.outdoor_pm ? state.activity.outdoor_pm_min : 0,
-        walking: state.activity.walking ? state.activity.walking_min : 0,
-        games: state.activity.games || {}
-      }
-    },
-    { name: 'sleep', data: {
-        confirmed: state.sleep.confirmed === true,
-        night: state.sleep.night || 0,
-        nap_am: state.sleep.nap_am || 0,
-        nap_pm: state.sleep.nap_pm || 0
-      }
-    },
-    { name: 'water', data: {
-        confirmed: state.water.confirmed === true,
-        records: state.water.records || []
-      }
-    },
-    { name: 'supplements', data: {
-        confirmed: state.supplements.confirmed === true,
-        ad: state.supplements.ad || false,
-        dha: state.supplements.dha || false
-      }
-    }
+    { name: 'activity', data: { confirmed: state.activity.confirmed === true, outdoor_am: state.activity.outdoor_am ? state.activity.outdoor_am_min : 0, outdoor_pm: state.activity.outdoor_pm ? state.activity.outdoor_pm_min : 0, walking: state.activity.walking ? state.activity.walking_min : 0, games: state.activity.games || {} } },
+    { name: 'sleep', data: { confirmed: state.sleep.confirmed === true, night: state.sleep.night || 0, nap_am: state.sleep.nap_am || 0, nap_pm: state.sleep.nap_pm || 0 } },
+    { name: 'water', data: { confirmed: state.water.confirmed === true, records: state.water.records || [] } },
+    { name: 'supplements', data: { confirmed: state.supplements.confirmed === true, ad: state.supplements.ad || false, dha: state.supplements.dha || false } }
   ];
-
   for (const sec of sections) {
     fetch(cfg.url + '/api/records', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-auth-token': cfg.token, 'x-user-id': cfg.userId, 'x-room-id': cfg.roomId
-      },
+      headers: { 'Content-Type': 'application/json', 'x-auth-token': cfg.token, 'x-user-id': cfg.userId, 'x-room-id': cfg.roomId },
       body: JSON.stringify({ date: TODAY, section: sec.name, data: sec.data })
     }).catch(() => {});
   }
@@ -566,19 +715,15 @@ function syncToServer() {
 async function loadFromServer() {
   const cfg = getSyncConfig();
   if (cfg.mode !== 'server' || !cfg.url) return;
-
   try {
     const res = await fetch(cfg.url + '/api/records/' + TODAY, {
       headers: { 'x-auth-token': cfg.token, 'x-user-id': cfg.userId, 'x-room-id': cfg.roomId }
     });
     const result = await res.json();
     if (!result.merged) return;
-
     isLoadingFromServer = true;
     const merged = result.merged;
     const newState = defaultData();
-
-    // Feeding: unwrap meals
     if (merged.feeding?.meals) {
       for (const [mealId, mealData] of Object.entries(merged.feeding.meals)) {
         if (!newState.feeding[mealId]) continue;
@@ -591,8 +736,6 @@ async function loadFromServer() {
         }
       }
     }
-
-    // Activity: convert numbers to bool+min
     if (merged.activity) {
       const a = merged.activity;
       newState.activity.confirmed = a.confirmed === true;
@@ -601,28 +744,21 @@ async function loadFromServer() {
       if (a.walking > 0) { newState.activity.walking = true; newState.activity.walking_min = a.walking; }
       if (a.games) newState.activity.games = a.games;
     }
-
-    // Sleep
     if (merged.sleep) {
       newState.sleep.confirmed = merged.sleep.confirmed === true;
       newState.sleep.night = merged.sleep.night || 0;
       newState.sleep.nap_am = merged.sleep.nap_am || 0;
       newState.sleep.nap_pm = merged.sleep.nap_pm || 0;
     }
-
-    // Water
     if (merged.water?.records) {
       newState.water.confirmed = merged.water.confirmed === true;
       newState.water.records = merged.water.records;
     }
-
-    // Supplements
     if (merged.supplements) {
       newState.supplements.confirmed = merged.supplements.confirmed === true;
       newState.supplements.ad = merged.supplements.ad || false;
       newState.supplements.dha = merged.supplements.dha || false;
     }
-
     state = newState;
     let all = {};
     try { all = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch(e) {}
@@ -630,17 +766,12 @@ async function loadFromServer() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
     renderAll();
     isLoadingFromServer = false;
-  } catch(e) {
-    isLoadingFromServer = false;
-    console.error('Load from server failed:', e);
-  }
+  } catch(e) { isLoadingFromServer = false; }
 }
 
 function getFeedingPatterns() {
-  try {
-    const raw = localStorage.getItem(PATTERN_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch(e) { return null; }
+  try { const raw = localStorage.getItem(PATTERN_KEY); return raw ? JSON.parse(raw) : null; }
+  catch(e) { return null; }
 }
 
 function updateFeedingPatterns(data) {
@@ -650,13 +781,11 @@ function updateFeedingPatterns(data) {
     if (!meal || !meal.time) continue;
     const hasFood = Object.values(meal.items || {}).some(i => i.checked);
     if (!hasFood) continue;
-
     if (!patterns[m.id]) patterns[m.id] = { times: [], foods: {} };
     if (!patterns[m.id].times.includes(meal.time)) {
       patterns[m.id].times.push(meal.time);
       if (patterns[m.id].times.length > 14) patterns[m.id].times.shift();
     }
-
     for (const [fid, fdata] of Object.entries(meal.items || {})) {
       if (!fdata.checked) continue;
       if (!patterns[m.id].foods[fid]) patterns[m.id].foods[fid] = [];
@@ -664,37 +793,39 @@ function updateFeedingPatterns(data) {
       if (patterns[m.id].foods[fid].length > 14) patterns[m.id].foods[fid].shift();
     }
   }
-
-  // Calculate averages
   const suggestions = {};
   for (const [mid, p] of Object.entries(patterns)) {
     if (!p.times.length) continue;
-    const avgMinutes = Math.round(p.times.reduce((sum, t) => {
-      const [h, m] = t.split(':').map(Number); return sum + h*60 + m;
-    }, 0) / p.times.length);
+    const avgMinutes = Math.round(p.times.reduce((sum, t) => { const [h, m] = t.split(':').map(Number); return sum + h*60 + m; }, 0) / p.times.length);
     const avgH = String(Math.floor(avgMinutes/60)).padStart(2,'0');
     const avgM = String(avgMinutes%60).padStart(2,'0');
-
-    const topFoods = Object.entries(p.foods).map(([id, qs]) => ({
-      id, avgQty: Math.round(qs.reduce((a,b)=>a+b,0)/qs.length), count: qs.length
-    })).sort((a,b)=>b.count-a.count);
-
+    const topFoods = Object.entries(p.foods).map(([id, qs]) => ({ id, avgQty: Math.round(qs.reduce((a,b)=>a+b,0)/qs.length), count: qs.length })).sort((a,b)=>b.count-a.count);
     suggestions[mid] = { avgTime: avgH+':'+avgM, count: p.times.length, topFoods };
   }
-
   localStorage.setItem(PATTERN_KEY, JSON.stringify(suggestions));
 }
 
 function getBabyProfile() {
   try {
     const raw = localStorage.getItem(PROFILE_KEY);
-    return raw ? JSON.parse(raw) : { name:'宝宝', birthday:'' };
-  } catch(e) { return { name:'宝宝', birthday:'' }; }
+    const p = raw ? JSON.parse(raw) : {};
+    return {
+      name: p.name || '安安',
+      birthday: p.birthday || '',
+      gender: p.gender || 'boy',
+      city: p.city || '',
+      measurements: p.measurements || { height: null, weight: null, foot: null }
+    };
+  } catch(e) {
+    return { name:'安安', birthday:'', gender:'boy', city:'', measurements: { height:null, weight:null, foot:null } };
+  }
 }
 
 function saveBabyProfile(profile) {
   localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
   updateHeaderTitle();
+  renderGrowthBanner();
+  renderMeasurements();
 }
 
 // ========== SYNC CONFIG ==========
@@ -708,15 +839,283 @@ function setSyncConfig(cfg) { localStorage.setItem('baby_sync', JSON.stringify(c
 let state = loadData();
 let currentMeal = 'breakfast';
 
-// ========== RENDER ==========
+// ========== WEATHER ==========
+const WEATHER_CODES = {
+  0: { icon:'☀️', desc:'晴' },
+  1: { icon:'🌤️', desc:'少云' },
+  2: { icon:'⛅', desc:'多云' },
+  3: { icon:'☁️', desc:'阴' },
+  45: { icon:'🌫️', desc:'雾' }, 48: { icon:'🌫️', desc:'霜雾' },
+  51: { icon:'🌦️', desc:'小毛毛雨' }, 53: { icon:'🌦️', desc:'毛毛雨' }, 55: { icon:'🌦️', desc:'大毛毛雨' },
+  61: { icon:'🌧️', desc:'小雨' }, 63: { icon:'🌧️', desc:'中雨' }, 65: { icon:'🌧️', desc:'大雨' },
+  71: { icon:'🌨️', desc:'小雪' }, 73: { icon:'🌨️', desc:'中雪' }, 75: { icon:'🌨️', desc:'大雪' },
+  80: { icon:'🌦️', desc:'小阵雨' }, 81: { icon:'🌦️', desc:'阵雨' }, 82: { icon:'⛈️', desc:'大阵雨' },
+  95: { icon:'⛈️', desc:'雷暴' }, 96: { icon:'⛈️', desc:'冰雹雷暴' }, 99: { icon:'⛈️', desc:'强雷暴' }
+};
+
+let weatherData = null;
+
+function getUVLevel(uv) {
+  if (uv <= 2) return { cls:'uv-low', label:'低', advice:'无需特殊防护' };
+  if (uv <= 5) return { cls:'uv-moderate', label:'中等', advice:'涂抹SPF15+防晒霜，戴帽子' };
+  if (uv <= 7) return { cls:'uv-high', label:'强', advice:'涂抹SPF30+防晒霜，避免10-16点直晒' };
+  if (uv <= 10) return { cls:'uv-very-high', label:'很强', advice:'SPF50+防晒霜，帽子+长袖，尽量不外出' };
+  return { cls:'uv-extreme', label:'极强', advice:'避免外出，全副武装防护' };
+}
+
+async function fetchWeather(city, lat, lon) {
+  try {
+    let url;
+    if (lat !== undefined && lon !== undefined) {
+      url = 'https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&current_weather=true&daily=temperature_2m_max,temperature_2m_min,uv_index_max,weather_code&timezone=Asia/Shanghai&forecast_days=1';
+    } else if (city) {
+      // Geocode city
+      const geoRes = await fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(city)+'&count=1&language=zh');
+      const geoData = await geoRes.json();
+      if (!geoData.results?.length) return;
+      const r = geoData.results[0];
+      url = 'https://api.open-meteo.com/v1/forecast?latitude='+r.latitude+'&longitude='+r.longitude+'&current_weather=true&daily=temperature_2m_max,temperature_2m_min,uv_index_max,weather_code&timezone=Asia/Shanghai&forecast_days=1';
+    } else return;
+
+    const res = await fetch(url);
+    const data = await res.json();
+    const cur = data.current_weather;
+    const daily = data.daily;
+    const wc = WEATHER_CODES[cur.weathercode] || { icon:'🌡️', desc:'--' };
+    weatherData = {
+      temp: Math.round(cur.temperature),
+      tempMax: daily ? Math.round(daily.temperature_2m_max[0]) : null,
+      tempMin: daily ? Math.round(daily.temperature_2m_min[0]) : null,
+      icon: wc.icon,
+      desc: wc.desc,
+      uv: daily ? daily.uv_index_max[0] : null,
+      city: city || '',
+      ts: Date.now()
+    };
+    // Cache for 3 hours
+    weatherData._cache = true;
+    localStorage.setItem(WEATHER_CACHE_KEY, JSON.stringify(weatherData));
+  } catch(e) {
+    console.log('Weather fetch failed:', e);
+  }
+}
+
+function loadWeatherCache() {
+  try {
+    const raw = localStorage.getItem(WEATHER_CACHE_KEY);
+    if (raw) {
+      const cached = JSON.parse(raw);
+      // Cache valid for 3 hours
+      if (Date.now() - cached.ts < 3 * 3600000) {
+        weatherData = cached;
+        return true;
+      }
+    }
+  } catch(e) {}
+  return false;
+}
+
+async function refreshWeather() {
+  const profile = getBabyProfile();
+  const city = profile.city;
+  if (!city) return;
+
+  // Try cache first
+  if (loadWeatherCache()) { renderWeather(); return; }
+
+  await fetchWeather(city);
+  renderWeather();
+}
+
+function renderWeather() {
+  const now = new Date();
+  const weekdays = ['日','一','二','三','四','五','六'];
+  const dateStr = now.getFullYear()+'年'+(now.getMonth()+1)+'月'+now.getDate()+'日';
+  const wkday = '周' + weekdays[now.getDay()];
+  document.getElementById('weatherDate').innerHTML = dateStr + '<span class="wkday">' + wkday + '</span>';
+
+  if (weatherData) {
+    document.getElementById('weatherIcon').textContent = weatherData.icon;
+    let tempStr = weatherData.temp + '°C';
+    if (weatherData.tempMax) tempStr += ' / ' + weatherData.tempMin + '°C';
+    document.getElementById('weatherTemp').textContent = tempStr;
+
+    let detail = weatherData.desc;
+    if (weatherData.city) detail += ' · ' + weatherData.city;
+
+    if (weatherData.uv !== null && weatherData.uv !== undefined) {
+      const uvInfo = getUVLevel(weatherData.uv);
+      detail += ' | 紫外线 <span class="uv-tag ' + uvInfo.cls + '">' + uvInfo.label + ' (UV' + weatherData.uv + ')</span>';
+      detail += ' | 🧴 ' + uvInfo.advice;
+    }
+    document.getElementById('weatherDetail').innerHTML = detail;
+  } else {
+    document.getElementById('weatherIcon').textContent = '🌡️';
+    document.getElementById('weatherTemp').textContent = '设置城市后获取天气';
+    const profile = getBabyProfile();
+    document.getElementById('weatherDetail').innerHTML = profile.city ? '天气加载中...' : '<span style="cursor:pointer;color:var(--green)" onclick="openSettings()">点击设置城市 →</span>';
+  }
+}
+
+// ========== GROWTH BANNER ==========
+function renderGrowthBanner() {
+  const profile = getBabyProfile();
+  const m = profile.measurements;
+  const banner = document.getElementById('growthBanner');
+
+  if (!m.height && !m.weight && !m.foot) {
+    banner.innerHTML = '<div class="growth-empty">📏 暂无生长发育数据，<span style="color:var(--green);cursor:pointer" onclick="toggleSection(\'secMeasure\');document.getElementById(\'secMeasure\').classList.add(\'open\');renderMeasurements()">去记录 →</span></div>';
+    return;
+  }
+
+  const ageM = profile.birthday ? calcAgeMonths(profile.birthday) : 12;
+  const gender = profile.gender || 'boy';
+  let html = '';
+
+  if (m.height?.value) {
+    const std = getGrowthRef(gender, 'height', ageM);
+    const eval_ = evaluateGrowth(m.height.value, std);
+    html += '<div class="growth-item"><span class="g-icon">📏</span><span class="g-val">' + m.height.value + '</span><span class="g-unit">cm</span>' + (eval_ ? '<span class="g-status ' + eval_.level + '">' + eval_.label + '</span>' : '') + '</div>';
+  }
+
+  if (m.weight?.value) {
+    const std = getGrowthRef(gender, 'weight', ageM);
+    const eval_ = evaluateGrowth(m.weight.value, std);
+    html += '<div class="growth-item"><span class="g-icon">⚖️</span><span class="g-val">' + m.weight.value + '</span><span class="g-unit">kg</span>' + (eval_ ? '<span class="g-status ' + eval_.level + '">' + eval_.label + '</span>' : '') + '</div>';
+  }
+
+  if (m.foot?.value) {
+    html += '<div class="growth-item"><span class="g-icon">👣</span><span class="g-val">' + m.foot.value + '</span><span class="g-unit">cm</span></div>';
+  }
+
+  // Show latest update date
+  const dates = [m.height?.date, m.weight?.date, m.foot?.date].filter(Boolean);
+  const latestDate = dates.sort().reverse()[0];
+  if (latestDate) {
+    html += '<div class="growth-date">📅 ' + latestDate + ' 更新</div>';
+  }
+
+  banner.innerHTML = html;
+}
+
+// ========== MEASUREMENT SECTION ==========
+function renderMeasurements() {
+  const profile = getBabyProfile();
+  const m = profile.measurements;
+  const nowStr = new Date().toISOString().slice(0, 10);
+
+  let html = '<div style="font-size:12px;color:var(--text2);margin-bottom:12px">记录安安的身高、体重和脚长，数据将自动与同龄标准进行对比评估。</div>';
+
+  // Height
+  html += '<div class="measure-input-row">';
+  html += '<div class="measure-label"><span class="measure-icon">📏</span> 身高</div>';
+  html += '<div class="measure-field">';
+  html += '<input type="number" id="measHeight" value="' + (m.height?.value || '') + '" placeholder="cm" min="40" max="130" step="0.1">';
+  html += '<span class="m-unit">cm</span>';
+  html += '<input type="date" class="measure-date-input" id="measHeightDate" value="' + (m.height?.date || nowStr) + '">';
+  html += '</div></div>';
+
+  // Weight
+  html += '<div class="measure-input-row">';
+  html += '<div class="measure-label"><span class="measure-icon">⚖️</span> 体重</div>';
+  html += '<div class="measure-field">';
+  html += '<input type="number" id="measWeight" value="' + (m.weight?.value || '') + '" placeholder="kg" min="2" max="30" step="0.1">';
+  html += '<span class="m-unit">kg</span>';
+  html += '<input type="date" class="measure-date-input" id="measWeightDate" value="' + (m.weight?.date || nowStr) + '">';
+  html += '</div></div>';
+
+  // Foot length
+  html += '<div class="measure-input-row">';
+  html += '<div class="measure-label"><span class="measure-icon">👣</span> 脚长</div>';
+  html += '<div class="measure-field">';
+  html += '<input type="number" id="measFoot" value="' + (m.foot?.value || '') + '" placeholder="cm" min="7" max="25" step="0.1">';
+  html += '<span class="m-unit">cm</span>';
+  html += '<input type="date" class="measure-date-input" id="measFootDate" value="' + (m.foot?.date || nowStr) + '">';
+  html += '</div></div>';
+
+  // History
+  if (profile.measurementHistory && profile.measurementHistory.length > 0) {
+    html += '<div class="measure-history"><div style="font-weight:600;margin-bottom:4px">📋 历史记录</div>';
+    const sorted = profile.measurementHistory.slice().sort((a,b) => b.date.localeCompare(a.date)).slice(0, 5);
+    for (const r of sorted) {
+      const parts = [];
+      if (r.height) parts.push('📏'+r.height+'cm');
+      if (r.weight) parts.push('⚖️'+r.weight+'kg');
+      if (r.foot) parts.push('👣'+r.foot+'cm');
+      html += '<div class="measure-history-row"><span>' + r.date + '</span><span>' + parts.join(' ') + '</span></div>';
+    }
+    html += '</div>';
+  }
+
+  html += '<div class="confirm-row"><button class="confirm-btn" onclick="saveMeasurements()">💾 保存数据</button></div>';
+  html += '<div class="confirm-hint">保存后数据将显示在顶部，并与同龄标准自动对比</div>';
+
+  document.getElementById('measureBody').innerHTML = html;
+}
+
+function saveMeasurements() {
+  const profile = getBabyProfile();
+  const nowStr = new Date().toISOString().slice(0, 10);
+
+  const heightVal = parseFloat(document.getElementById('measHeight').value);
+  const weightVal = parseFloat(document.getElementById('measWeight').value);
+  const footVal = parseFloat(document.getElementById('measFoot').value);
+
+  const m = profile.measurements;
+
+  if (!isNaN(heightVal) && heightVal > 0) {
+    m.height = { value: heightVal, date: document.getElementById('measHeightDate').value || nowStr };
+  } else {
+    m.height = null;
+  }
+  if (!isNaN(weightVal) && weightVal > 0) {
+    m.weight = { value: weightVal, date: document.getElementById('measWeightDate').value || nowStr };
+  } else {
+    m.weight = null;
+  }
+  if (!isNaN(footVal) && footVal > 0) {
+    m.foot = { value: footVal, date: document.getElementById('measFootDate').value || nowStr };
+  } else {
+    m.foot = null;
+  }
+
+  profile.measurements = m;
+
+  // Add to history
+  const historyEntry = { date: nowStr };
+  if (m.height) historyEntry.height = m.height.value;
+  if (m.weight) historyEntry.weight = m.weight.value;
+  if (m.foot) historyEntry.foot = m.foot.value;
+
+  if (!profile.measurementHistory) profile.measurementHistory = [];
+  // Check if today already has an entry
+  const existingIdx = profile.measurementHistory.findIndex(h => h.date === nowStr);
+  if (existingIdx >= 0) {
+    profile.measurementHistory[existingIdx] = { ...profile.measurementHistory[existingIdx], ...historyEntry };
+  } else {
+    profile.measurementHistory.push(historyEntry);
+  }
+
+  saveBabyProfile(profile);
+  renderGrowthBanner();
+  renderMeasurements();
+  renderAnalysis();
+  renderAlerts();
+  toast('生长发育数据已保存');
+}
+
+// ========== RENDER ALL ==========
 function renderAll() {
   updateHeaderTitle();
+  renderWeather();
+  renderGrowthBanner();
   renderMealTabs();
   renderMealContent();
   renderActivity();
   renderSleep();
   renderWater();
   renderSupps();
+  renderMeasurements();
   renderChips();
   updateSummary();
   renderAnalysis();
@@ -727,12 +1126,12 @@ function renderAll() {
 
 function updateHeaderTitle() {
   const profile = getBabyProfile();
-  const name = profile.name || '宝宝';
-  document.getElementById('babyNameDisplay').textContent = name + '喂养追踪';
-  document.getElementById('pageTitle').textContent = name + '喂养追踪';
+  const name = profile.name || '安安';
+  document.getElementById('babyNameDisplay').textContent = name;
+  document.getElementById('pageTitle').textContent = name + '喂养';
   const metaTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
-  if (metaTitle) metaTitle.content = name + '喂养追踪';
-
+  if (metaTitle) metaTitle.content = name + '喂养';
+  document.getElementById('headerTitle').innerHTML = '🍼 <span id="babyNameDisplay">' + name + '</span>喂养<span class="age-tag" id="ageTag" style="display:none"></span></div>';
   const ageStr = getAgeStr();
   const tag = document.getElementById('ageTag');
   if (ageStr) { tag.style.display = 'inline'; tag.textContent = ageStr; }
@@ -756,9 +1155,10 @@ function openSettings() {
   const profile = getBabyProfile();
   document.getElementById('setBabyName').value = profile.name || '';
   document.getElementById('setBirthday').value = profile.birthday || '';
+  document.getElementById('setGender').value = profile.gender || 'boy';
+  document.getElementById('setCity').value = profile.city || '';
   updateAgeCalc();
   document.getElementById('settingsOverlay').classList.add('show');
-
   document.getElementById('setBirthday').onchange = updateAgeCalc;
 }
 
@@ -774,28 +1174,35 @@ function updateAgeCalc() {
 }
 
 function saveSettings() {
-  const name = document.getElementById('setBabyName').value.trim() || '宝宝';
+  const name = document.getElementById('setBabyName').value.trim() || '安安';
   const birthday = document.getElementById('setBirthday').value;
-
-  const profile = { name, birthday };
+  const gender = document.getElementById('setGender').value;
+  const city = document.getElementById('setCity').value.trim();
+  const profile = getBabyProfile();
+  profile.name = name;
+  profile.birthday = birthday;
+  profile.gender = gender;
+  profile.city = city;
   saveBabyProfile(profile);
 
-  // If in sync mode, push to server
   const cfg = getSyncConfig();
   if (cfg.mode === 'server' && cfg.url && cfg.role === 'creator') {
     fetch(cfg.url+'/api/baby-profile', {
       method:'PUT',
-      headers: {
-        'Content-Type':'application/json',
-        'x-auth-token':cfg.token, 'x-user-id':cfg.userId, 'x-room-id':cfg.roomId
-      },
-      body: JSON.stringify({ name, birthday })
+      headers: { 'Content-Type':'application/json', 'x-auth-token':cfg.token, 'x-user-id':cfg.userId, 'x-room-id':cfg.roomId },
+      body: JSON.stringify({ name, birthday, gender, city })
     }).catch(()=>{});
   }
 
   closeSettings();
   updateHeaderTitle();
   renderAnalysis();
+  renderGrowthBanner();
+
+  // Refresh weather
+  weatherData = null;
+  refreshWeather();
+
   toast('设置已保存');
 }
 
@@ -804,7 +1211,7 @@ function renderMealTabs() {
   document.getElementById('mealTabs').innerHTML = MEALS.map(m => {
     const meal = state.feeding[m.id];
     const timeStr = meal?.time || m.defaultTime;
-    return `<button class="meal-tab${currentMeal===m.id?' active':''}" onclick="selectMeal('${m.id}')">${m.emoji} ${m.label} ${timeStr}</button>`;
+    return '<button class="meal-tab'+(currentMeal===m.id?' active':'')+'" onclick="selectMeal(\''+m.id+'\')">'+m.emoji+' '+m.label+' '+timeStr+'</button>';
   }).join('');
 }
 
@@ -815,107 +1222,64 @@ function renderMealContent() {
   const meal = state.feeding[currentMeal] || { completed:false, time:MEALS.find(m=>m.id===currentMeal)?.defaultTime||'07:30', items:{} };
   const time = meal.time || MEALS.find(m=>m.id===currentMeal)?.defaultTime||'07:30';
   const hasConfirmed = meal.completed;
-
   let suggestionHtml = '';
   const patterns = getFeedingPatterns();
   if (patterns && patterns[currentMeal] && patterns[currentMeal].count >= 2) {
     const p = patterns[currentMeal];
-    suggestionHtml = `<span class="time-suggestion" onclick="applyPatternTime('${currentMeal}','${p.avgTime}')" title="基于最近 ${p.count} 次记录的推荐时间">建议 ${p.avgTime}</span>`;
+    suggestionHtml = '<span class="time-suggestion" onclick="applyPatternTime(\''+currentMeal+'\',\''+p.avgTime+'\')" title="基于最近 '+p.count+' 次记录的推荐时间">建议 '+p.avgTime+'</span>';
   }
-
   const hasAnyChecked = foods.some(f => meal.items[f.id]?.checked);
-
-  let html = `
-    <div class="time-row">
-      <span class="time-label">⏰ 时间</span>
-      <input class="time-input" type="time" value="${time}" onchange="updateMealTimePending('${currentMeal}',this.value)" id="time_${currentMeal}">
-      ${suggestionHtml}
-    </div>`;
-
+  let html = '<div class="time-row"><span class="time-label">⏰ 时间</span><input class="time-input" type="time" value="'+time+'" onchange="updateMealTimePending(\''+currentMeal+'\',this.value)" id="time_'+currentMeal+'">'+suggestionHtml+'</div>';
   html += foods.map(f => {
     const item = meal.items[f.id] || { checked:false, qty:0 };
-    return `<div class="food-item">
-      <div class="food-left" onclick="toggleFoodPending('${currentMeal}','${f.id}')">
-        <div class="food-check${item.checked?' checked':''}"></div>
-        <span class="food-name">${f.name}</span>
-      </div>
-      <div class="food-right">
-        ${item.checked ? `<div class="food-qty">
-          <button class="food-qty-btn" onclick="event.stopPropagation();adjustQtyPending('${currentMeal}','${f.id}',-${f.step})">−</button>
-          <span class="food-qty-val">${item.qty}</span>
-          <button class="food-qty-btn" onclick="event.stopPropagation();adjustQtyPending('${currentMeal}','${f.id}',${f.step})">+</button>
-          <span class="qty-unit">${f.unit}</span>
-        </div>` : ''}
-        <span class="food-ref">建议 ${f.ref}${f.unit}</span>
-      </div>
-    </div>`;
+    return '<div class="food-item"><div class="food-left" onclick="toggleFoodPending(\''+currentMeal+'\',\''+f.id+'\')"><div class="food-check'+(item.checked?' checked':'')+'"></div><span class="food-name">'+f.name+'</span></div><div class="food-right">'+(item.checked ? '<div class="food-qty"><button class="food-qty-btn" onclick="event.stopPropagation();adjustQtyPending(\''+currentMeal+'\',\''+f.id+'\',-'+f.step+')">\u2212</button><span class="food-qty-val">'+item.qty+'</span><button class="food-qty-btn" onclick="event.stopPropagation();adjustQtyPending(\''+currentMeal+'\',\''+f.id+'\','+f.step+')">+</button><span class="qty-unit">'+f.unit+'</span></div>' : '')+'<span class="food-ref">建议 '+f.ref+f.unit+'</span></div></div>';
   }).join('');
-
-  // Confirm / Edit button
   if (hasConfirmed) {
-    html += `<div class="confirm-row"><span class="confirm-done">✅ 已打卡</span><button class="confirm-edit-btn" onclick="unconfirmMeal('${currentMeal}')">修改</button></div>`;
+    html += '<div class="confirm-row"><span class="confirm-done">✅ 已打卡</span><button class="confirm-edit-btn" onclick="unconfirmMeal(\''+currentMeal+'\')">修改</button></div>';
   } else {
-    html += `<div class="confirm-row"><button class="confirm-btn"${!hasAnyChecked?' disabled':''} onclick="confirmMeal('${currentMeal}')">✅ 确认打卡</button></div>`;
+    html += '<div class="confirm-row"><button class="confirm-btn"'+(hasAnyChecked?'':' disabled')+' onclick="confirmMeal(\''+currentMeal+'\')">✅ 确认打卡</button></div>';
     if (!hasAnyChecked) html += '<div class="confirm-hint">请先勾选食物品种，再调整数量，然后确认打卡</div>';
   }
-
   document.getElementById('mealContent').innerHTML = html;
 }
 
 function applyPatternTime(mealId, time) {
   if (!state.feeding[mealId]) state.feeding[mealId] = { completed:false, items:{} };
   state.feeding[mealId].time = time;
-  renderMealContent();
-  updateChipsOnly();
+  renderMealContent(); updateChipsOnly();
 }
-
 function updateMealTimePending(mealId, time) {
   if (!state.feeding[mealId]) state.feeding[mealId] = { completed:false, items:{} };
   state.feeding[mealId].time = time;
   renderMealContent();
 }
-
 function toggleFoodPending(mealId, foodId) {
   if (!state.feeding[mealId]) state.feeding[mealId] = { completed:false, time:MEALS.find(m=>m.id===mealId)?.defaultTime||'07:30', items:{} };
   const item = state.feeding[mealId].items[foodId] || { checked:false, qty:0 };
   item.checked = !item.checked;
-  if (item.checked && item.qty === 0) {
-    const f = (MEAL_FOODS[mealId]||[]).find(x => x.id===foodId);
-    if (f) item.qty = f.ref;
-  }
+  if (item.checked && item.qty === 0) { const f = (MEAL_FOODS[mealId]||[]).find(x => x.id===foodId); if (f) item.qty = f.ref; }
   if (!item.checked) item.qty = 0;
   state.feeding[mealId].items[foodId] = item;
-  // Don't save yet — wait for confirm
-  renderMealContent();
-  updateChipsOnly();
+  renderMealContent(); updateChipsOnly();
 }
-
 function adjustQtyPending(mealId, foodId, delta) {
   if (!state.feeding[mealId]?.items[foodId]) return;
   state.feeding[mealId].items[foodId].qty = Math.max(0, Math.round((state.feeding[mealId].items[foodId].qty + delta) * 100) / 100);
   renderMealContent();
 }
-
 function confirmMeal(mealId) {
   if (!state.feeding[mealId]) state.feeding[mealId] = { completed:false, items:{} };
   const foods = MEAL_FOODS[mealId] || [];
   state.feeding[mealId].completed = foods.some(f => state.feeding[mealId].items[f.id]?.checked);
   saveData(state);
 }
-
 function unconfirmMeal(mealId) {
   if (!state.feeding[mealId]) return;
   state.feeding[mealId].completed = false;
   saveData(state);
 }
+function updateChipsOnly() { updateSummary(); renderMealTabs(); renderChips(); }
 
-function updateChipsOnly() {
-  updateSummary();
-  renderMealTabs();
-  renderChips();
-}
-
-// ========== ACTIVITY ==========
 // ========== ACTIVITY (with confirm) ==========
 function renderActivity() {
   const a = state.activity;
@@ -930,51 +1294,41 @@ function renderActivity() {
   const p = confirmed ? 'pointer-events:none' : '';
 
   let html = '';
-  html += '<div class="activity-row"><span class="act-label">☀️ 上午户外</span><div style="display:flex;align-items:center;gap:6px"><div class="act-check' + (a.outdoor_am?' checked':'') + '" onclick="' + (confirmed?'':'toggleActPending(&quot;outdoor_am&quot;)') + '" style="' + p + '"></div><div class="food-qty"><button class="food-qty-btn" onclick="' + (confirmed?'':'adjustActPending(&quot;outdoor_am_min&quot;,-15)') + '"' + d + '>−</button><span class="food-qty-val">' + a.outdoor_am_min + '</span><button class="food-qty-btn" onclick="' + (confirmed?'':'adjustActPending(&quot;outdoor_am_min&quot;,15)') + '"' + d + '>+</button><span class="qty-unit">分钟</span></div></div></div>';
+  html += '<div class="activity-row"><span class="act-label">☀️ 上午户外</span><div style="display:flex;align-items:center;gap:6px"><div class="act-check'+(a.outdoor_am?' checked':'')+'" onclick="'+(confirmed?'':'toggleActPending(&quot;outdoor_am&quot;)')+'" style="'+p+'"></div><div class="food-qty"><button class="food-qty-btn" onclick="'+(confirmed?'':'adjustActPending(&quot;outdoor_am_min&quot;,-15)')+'"'+d+'>\u2212</button><span class="food-qty-val">'+a.outdoor_am_min+'</span><button class="food-qty-btn" onclick="'+(confirmed?'':'adjustActPending(&quot;outdoor_am_min&quot;,15)')+'"'+d+'>+</button><span class="qty-unit">分钟</span></div></div></div>';
 
-  html += '<div class="activity-row"><span class="act-label">🌤️ 下午户外</span><div style="display:flex;align-items:center;gap:6px"><div class="act-check' + (a.outdoor_pm?' checked':'') + '" onclick="' + (confirmed?'':'toggleActPending(&quot;outdoor_pm&quot;)') + '" style="' + p + '"></div><div class="food-qty"><button class="food-qty-btn" onclick="' + (confirmed?'':'adjustActPending(&quot;outdoor_pm_min&quot;,-15)') + '"' + d + '>−</button><span class="food-qty-val">' + a.outdoor_pm_min + '</span><button class="food-qty-btn" onclick="' + (confirmed?'':'adjustActPending(&quot;outdoor_pm_min&quot;,15)') + '"' + d + '>+</button><span class="qty-unit">分钟</span></div></div></div>';
+  html += '<div class="activity-row"><span class="act-label">🌤️ 下午户外</span><div style="display:flex;align-items:center;gap:6px"><div class="act-check'+(a.outdoor_pm?' checked':'')+'" onclick="'+(confirmed?'':'toggleActPending(&quot;outdoor_pm&quot;)')+'" style="'+p+'"></div><div class="food-qty"><button class="food-qty-btn" onclick="'+(confirmed?'':'adjustActPending(&quot;outdoor_pm_min&quot;,-15)')+'"'+d+'>\u2212</button><span class="food-qty-val">'+a.outdoor_pm_min+'</span><button class="food-qty-btn" onclick="'+(confirmed?'':'adjustActPending(&quot;outdoor_pm_min&quot;,15)')+'"'+d+'>+</button><span class="qty-unit">分钟</span></div></div></div>';
 
-  html += '<div class="activity-row"><span class="act-label">🚶 行走练习</span><div style="display:flex;align-items:center;gap:6px"><div class="act-check' + (a.walking?' checked':'') + '" onclick="' + (confirmed?'':'toggleActPending(&quot;walking&quot;)') + '" style="' + p + '"></div><div class="food-qty"><button class="food-qty-btn" onclick="' + (confirmed?'':'adjustActPending(&quot;walking_min&quot;,-5)') + '"' + d + '>−</button><span class="food-qty-val">' + a.walking_min + '</span><button class="food-qty-btn" onclick="' + (confirmed?'':'adjustActPending(&quot;walking_min&quot;,5)') + '"' + d + '>+</button><span class="qty-unit">分钟</span></div></div></div>';
+  html += '<div class="activity-row"><span class="act-label">🚶 行走练习</span><div style="display:flex;align-items:center;gap:6px"><div class="act-check'+(a.walking?' checked':'')+'" onclick="'+(confirmed?'':'toggleActPending(&quot;walking&quot;)')+'" style="'+p+'"></div><div class="food-qty"><button class="food-qty-btn" onclick="'+(confirmed?'':'adjustActPending(&quot;walking_min&quot;,-5)')+'"'+d+'>\u2212</button><span class="food-qty-val">'+a.walking_min+'</span><button class="food-qty-btn" onclick="'+(confirmed?'':'adjustActPending(&quot;walking_min&quot;,5)')+'"'+d+'>+</button><span class="qty-unit">分钟</span></div></div></div>';
 
-  // Game cards with time adjustment
-  html += '<div style="margin-top:14px;font-size:13px;font-weight:600;color:var(--text2)">亲子互动 <span style="font-weight:400;color:var(--text3)">（' + totalGame + ' 分钟）</span></div>';
+  html += '<div style="margin-top:14px;font-size:13px;font-weight:600;color:var(--text2)">亲子互动 <span style="font-weight:400;color:var(--text3)">（'+totalGame+' 分钟）</span></div>';
   html += '<div class="game-grid">';
   for (let i = 0; i < GAMES.length; i++) {
     const g = GAMES[i];
     const sel = gameIds.includes(g.id);
-    const gm = sel && !confirmed ? ('<div style="margin-top:6px;display:flex;align-items:center;gap:4px;justify-content:center"><button class="food-qty-btn" style="font-size:11px;padding:1px 6px" onclick="event.stopPropagation();adjustGameTimePending(&quot;' + g.id + '&quot;,-5)">−</button><span style="font-size:12px;color:var(--text)">' + (a.games[g.id]||15) + '</span><button class="food-qty-btn" style="font-size:11px;padding:1px 6px" onclick="event.stopPropagation();adjustGameTimePending(&quot;' + g.id + '&quot;,5)">+</button><span style="font-size:10px;color:var(--text3)">分钟</span></div>') : (sel ? ('<div style="margin-top:6px;font-size:11px;color:var(--text3)">' + (a.games[g.id]||15) + ' 分钟</div>') : '');
-    html += '<div class="game-card' + (sel?' selected':'') + '" onclick="' + (confirmed?'':'toggleGamePending(&quot;' + g.id + '&quot;)') + '" style="' + p + '"><span class="game-emoji">' + g.emoji + '</span>' + g.name + gm + '</div>';
+    const gm = sel && !confirmed ? ('<div style="margin-top:6px;display:flex;align-items:center;gap:4px;justify-content:center"><button class="food-qty-btn" style="font-size:11px;padding:1px 6px" onclick="event.stopPropagation();adjustGameTimePending(&quot;'+g.id+'&quot;,-5)">\u2212</button><span style="font-size:12px;color:var(--text)">'+(a.games[g.id]||15)+'</span><button class="food-qty-btn" style="font-size:11px;padding:1px 6px" onclick="event.stopPropagation();adjustGameTimePending(&quot;'+g.id+'&quot;,5)">+</button><span style="font-size:10px;color:var(--text3)">分钟</span></div>') : (sel ? ('<div style="margin-top:6px;font-size:11px;color:var(--text3)">'+(a.games[g.id]||15)+' 分钟</div>') : '');
+    html += '<div class="game-card'+(sel?' selected':'')+'" onclick="'+(confirmed?'':'toggleGamePending(&quot;'+g.id+'&quot;)')+'" style="'+p+'"><span class="game-emoji">'+g.emoji+'</span>'+g.name+gm+'</div>';
   }
   html += '</div>';
-
-  html += '<div class="bottom-summary">总户外：' + totalOutdoor + ' 分钟 <span class="ref">参考 ' + ref.outdoor.min + '-' + ref.outdoor.max + ' 分钟</span> | 游戏 ' + gameIds.length + ' 项 ' + totalGame + ' 分钟</div>';
+  html += '<div class="bottom-summary">总户外：'+totalOutdoor+' 分钟 <span class="ref">参考 '+ref.outdoor.min+'-'+ref.outdoor.max+' 分钟</span> | 游戏 '+gameIds.length+' 项 '+totalGame+' 分钟</div>';
 
   if (confirmed) {
     html += '<div class="confirm-row"><span class="confirm-done">✅ 已打卡</span><button class="confirm-edit-btn" onclick="unconfirmActivity()">修改</button></div>';
   } else {
-    html += '<div class="confirm-row"><button class="confirm-btn"' + (!hasAny?' disabled':'') + ' onclick="confirmActivity()">✅ 确认打卡</button></div>';
+    html += '<div class="confirm-row"><button class="confirm-btn"'+(hasAny?'':' disabled')+' onclick="confirmActivity()">✅ 确认打卡</button></div>';
     if (!hasAny) html += '<div class="confirm-hint">请先勾选户外活动、行走练习或亲子游戏，然后确认打卡</div>';
   }
-
   document.getElementById('activityBody').innerHTML = html;
 }
 function toggleActPending(prop) { state.activity[prop] = !state.activity[prop]; renderActivity(); updateChipsOnly(); }
 function adjustActPending(prop, d) { state.activity[prop] = Math.max(0, state.activity[prop]+d); renderActivity(); updateChipsOnly(); }
 function toggleGamePending(id) {
   if (!state.activity.games) state.activity.games = {};
-  if (state.activity.games[id]) {
-    delete state.activity.games[id];
-  } else {
-    state.activity.games[id] = 15;
-  }
+  if (state.activity.games[id]) { delete state.activity.games[id]; } else { state.activity.games[id] = 15; }
   renderActivity(); updateChipsOnly();
 }
 function adjustGameTimePending(id, d) {
   if (!state.activity.games) state.activity.games = {};
-  if (state.activity.games[id]) {
-    state.activity.games[id] = Math.max(5, Math.min(120, state.activity.games[id] + d));
-    renderActivity(); updateChipsOnly();
-  }
+  if (state.activity.games[id]) { state.activity.games[id] = Math.max(5, Math.min(120, state.activity.games[id] + d)); renderActivity(); updateChipsOnly(); }
 }
 function confirmActivity() { state.activity.confirmed = true; saveData(state); }
 function unconfirmActivity() { state.activity.confirmed = false; saveData(state); }
@@ -987,24 +1341,18 @@ function renderSleep() {
   const total = s.night + s.nap_am + s.nap_pm;
   const hasAny = total > 0;
   const d = confirmed ? ' disabled' : '';
-
   let html = '';
-  html += '<div class="sleep-row"><span>🌙 夜间睡眠</span><div class="food-qty"><button class="food-qty-btn" onclick="' + (confirmed?'':'adjustSleepPending(&quot;night&quot;,-0.5)') + '"' + d + '>−</button><span class="food-qty-val">' + s.night + '</span><button class="food-qty-btn" onclick="' + (confirmed?'':'adjustSleepPending(&quot;night&quot;,0.5)') + '"' + d + '>+</button><span class="qty-unit">小时</span></div></div>';
-  html += '<div class="sleep-row"><span>☀️ 上午小睡</span><div class="food-qty"><button class="food-qty-btn" onclick="' + (confirmed?'':'adjustSleepPending(&quot;nap_am&quot;,-0.5)') + '"' + d + '>−</button><span class="food-qty-val">' + s.nap_am + '</span><button class="food-qty-btn" onclick="' + (confirmed?'':'adjustSleepPending(&quot;nap_am&quot;,0.5)') + '"' + d + '>+</button><span class="qty-unit">小时</span></div></div>';
-  html += '<div class="sleep-row"><span>🌤️ 下午小睡</span><div class="food-qty"><button class="food-qty-btn" onclick="' + (confirmed?'':'adjustSleepPending(&quot;nap_pm&quot;,-0.5)') + '"' + d + '>−</button><span class="food-qty-val">' + s.nap_pm + '</span><button class="food-qty-btn" onclick="' + (confirmed?'':'adjustSleepPending(&quot;nap_pm&quot;,0.5)') + '"' + d + '>+</button><span class="qty-unit">小时</span></div></div>';
-
-  const hint = total > 0
-    ? (total >= ref.sleep.total * 0.9 ? '✅ 睡眠充足' : total >= ref.sleep.total * 0.7 ? '⚠️ 睡眠偏少' : '❌ 睡眠不足')
-    : '';
-  html += `<div class="bottom-summary">总睡眠：${total} h <span class="ref">参考 ${ref.sleep.total} h</span>${hint ? ' · ' + hint : ''}</div>`;
-
+  html += '<div class="sleep-row"><span>🌙 夜间睡眠</span><div class="food-qty"><button class="food-qty-btn" onclick="'+(confirmed?'':'adjustSleepPending(&quot;night&quot;,-0.5)')+'"'+d+'>\u2212</button><span class="food-qty-val">'+s.night+'</span><button class="food-qty-btn" onclick="'+(confirmed?'':'adjustSleepPending(&quot;night&quot;,0.5)')+'"'+d+'>+</button><span class="qty-unit">小时</span></div></div>';
+  html += '<div class="sleep-row"><span>☀️ 上午小睡</span><div class="food-qty"><button class="food-qty-btn" onclick="'+(confirmed?'':'adjustSleepPending(&quot;nap_am&quot;,-0.5)')+'"'+d+'>\u2212</button><span class="food-qty-val">'+s.nap_am+'</span><button class="food-qty-btn" onclick="'+(confirmed?'':'adjustSleepPending(&quot;nap_am&quot;,0.5)')+'"'+d+'>+</button><span class="qty-unit">小时</span></div></div>';
+  html += '<div class="sleep-row"><span>🌤️ 下午小睡</span><div class="food-qty"><button class="food-qty-btn" onclick="'+(confirmed?'':'adjustSleepPending(&quot;nap_pm&quot;,-0.5)')+'"'+d+'>\u2212</button><span class="food-qty-val">'+s.nap_pm+'</span><button class="food-qty-btn" onclick="'+(confirmed?'':'adjustSleepPending(&quot;nap_pm&quot;,0.5)')+'"'+d+'>+</button><span class="qty-unit">小时</span></div></div>';
+  const hint = total > 0 ? (total >= ref.sleep.total * 0.9 ? '✅ 睡眠充足' : total >= ref.sleep.total * 0.7 ? '⚠️ 睡眠偏少' : '❌ 睡眠不足') : '';
+  html += '<div class="bottom-summary">总睡眠：'+total+' h <span class="ref">参考 '+ref.sleep.total+' h</span>'+(hint ? ' · '+hint:'')+'</div>';
   if (confirmed) {
-    html += `<div class="confirm-row"><span class="confirm-done">✅ 已打卡</span><button class="confirm-edit-btn" onclick="unconfirmSleep()">修改</button></div>`;
+    html += '<div class="confirm-row"><span class="confirm-done">✅ 已打卡</span><button class="confirm-edit-btn" onclick="unconfirmSleep()">修改</button></div>';
   } else {
-    html += `<div class="confirm-row"><button class="confirm-btn"${!hasAny?' disabled':''} onclick="confirmSleep()">✅ 确认打卡</button></div>`;
+    html += '<div class="confirm-row"><button class="confirm-btn"'+(hasAny?'':' disabled')+' onclick="confirmSleep()">✅ 确认打卡</button></div>';
     if (!hasAny) html += '<div class="confirm-hint">请先调整睡眠时长，然后确认打卡</div>';
   }
-
   document.getElementById('sleepBody').innerHTML = html;
 }
 function adjustSleepPending(p, d) { state.sleep[p] = Math.max(0, Math.round((state.sleep[p]+d)*10)/10); renderSleep(); updateChipsOnly(); }
@@ -1019,43 +1367,36 @@ function renderWater() {
   const total = records.reduce((s,r)=>s+(r.amount||0),0);
   const ref = getAgeRef().water;
   const hasAny = records.length > 0;
-
   let html = '<div class="water-slots">';
   for (let i = 0; i < WATER_SLOTS.length; i++) {
     const s = WATER_SLOTS[i];
     const r = records.find(x=>x.slot===s.id);
-    const onclick = confirmed ? '' : 'toggleWaterPending(&quot;' + s.id + '&quot;)';
+    const onclick = confirmed ? '' : 'toggleWaterPending(&quot;'+s.id+'&quot;)';
     const style = confirmed ? 'pointer-events:none' : '';
-    html += '<div class="water-slot' + (r?' recorded':'') + '" onclick="' + onclick + '" style="' + style + '">' + s.emoji + ' ' + s.label + (r?'<span class="slot-amount">' + r.amount + 'ml</span>':'') + '</div>';
+    html += '<div class="water-slot'+(r?' recorded':'')+'" onclick="'+onclick+'" style="'+style+'">'+s.emoji+' '+s.label+(r?'<span class="slot-amount">'+r.amount+'ml</span>':'')+'</div>';
   }
   html += '</div>';
-
   if (records.length > 0) {
     for (let i = 0; i < records.length; i++) {
       const r = records[i];
       const s = WATER_SLOTS.find(s=>s.id===r.slot) || {};
-      const emoji = s.emoji || '💧';
-      const label = s.label || '';
-      const adjMinus = confirmed ? '' : 'adjustWaterPending(&quot;' + r.slot + '&quot;,-10)';
-      const adjPlus = confirmed ? '' : 'adjustWaterPending(&quot;' + r.slot + '&quot;,10)';
+      const adjMinus = confirmed ? '' : 'adjustWaterPending(&quot;'+r.slot+'&quot;,-10)';
+      const adjPlus = confirmed ? '' : 'adjustWaterPending(&quot;'+r.slot+'&quot;,10)';
       const disabled = confirmed ? ' disabled' : '';
-      const clearBtn = confirmed ? '' : '<button style="background:none;border:none;color:var(--rose);font-size:12px;cursor:pointer" onclick="removeWaterPending(\'' + r.slot + '\')">清除</button>';
-      html += '<div class="activity-row"><span>' + emoji + ' ' + label + '</span><div class="food-qty"><button class="food-qty-btn" onclick="' + adjMinus + '"' + disabled + '>−</button><span class="food-qty-val">' + r.amount + '</span><button class="food-qty-btn" onclick="' + adjPlus + '"' + disabled + '>+</button><span class="qty-unit">ml</span></div>' + clearBtn + '</div>';
+      const clearBtn = confirmed ? '' : '<button style="background:none;border:none;color:var(--rose);font-size:12px;cursor:pointer" onclick="removeWaterPending(\''+r.slot+'\')">清除</button>';
+      html += '<div class="activity-row"><span>'+(s.emoji||'💧')+' '+(s.label||'')+'</span><div class="food-qty"><button class="food-qty-btn" onclick="'+adjMinus+'"'+disabled+'>\u2212</button><span class="food-qty-val">'+r.amount+'</span><button class="food-qty-btn" onclick="'+adjPlus+'"'+disabled+'>+</button><span class="qty-unit">ml</span></div>'+clearBtn+'</div>';
     }
   } else {
     html += '<div style="padding:20px;text-align:center;color:var(--text2);font-size:13px">点击上方时间段记录饮水量</div>';
   }
-
   const hint = total >= ref.min ? '✅ 饮水达标' : total >= ref.min * 0.5 ? '⚠️ 饮水偏少' : total > 0 ? '❌ 饮水不足' : '';
-  html += `<div class="bottom-summary">总饮水：${total} ml <span class="ref">参考 ${ref.min}-${ref.max} ml</span>${hint ? ' · ' + hint : ''}</div>`;
-
+  html += '<div class="bottom-summary">总饮水：'+total+' ml <span class="ref">参考 '+ref.min+'-'+ref.max+' ml</span>'+(hint ? ' · '+hint:'')+'</div>';
   if (confirmed) {
-    html += `<div class="confirm-row"><span class="confirm-done">✅ 已打卡</span><button class="confirm-edit-btn" onclick="unconfirmWater()">修改</button></div>`;
+    html += '<div class="confirm-row"><span class="confirm-done">✅ 已打卡</span><button class="confirm-edit-btn" onclick="unconfirmWater()">修改</button></div>';
   } else {
-    html += `<div class="confirm-row"><button class="confirm-btn"${!hasAny?' disabled':''} onclick="confirmWater()">✅ 确认打卡</button></div>`;
+    html += '<div class="confirm-row"><button class="confirm-btn"'+(hasAny?'':' disabled')+' onclick="confirmWater()">✅ 确认打卡</button></div>';
     if (!hasAny) html += '<div class="confirm-hint">请先点击时间段记录饮水量，然后确认打卡</div>';
   }
-
   document.getElementById('waterBody').innerHTML = html;
 }
 function toggleWaterPending(slot) {
@@ -1083,19 +1424,16 @@ function renderSupps() {
   const confirmed = sup.confirmed === true;
   const hasAny = sup.ad || sup.dha;
   const p = confirmed ? 'pointer-events:none' : '';
-
   let html = '';
-  html += '<div class="activity-row"><span>💊 维生素AD（A 1500-2000U + D 400-800U）</span><div class="act-check' + (sup.ad?' checked':'') + '" onclick="' + (confirmed?'':'toggleSuppPending(&quot;ad&quot;)') + '" style="' + p + '"></div></div>';
-  html += '<div class="activity-row"><span>🐟 DHA（建议补充）</span><div class="act-check' + (sup.dha?' checked':'') + '" onclick="' + (confirmed?'':'toggleSuppPending(&quot;dha&quot;)') + '" style="' + p + '"></div></div>';
+  html += '<div class="activity-row"><span>💊 维生素AD（A 1500-2000U + D 400-800U）</span><div class="act-check'+(sup.ad?' checked':'')+'" onclick="'+(confirmed?'':'toggleSuppPending(&quot;ad&quot;)')+'" style="'+p+'"></div></div>';
+  html += '<div class="activity-row"><span>🐟 DHA（建议补充）</span><div class="act-check'+(sup.dha?' checked':'')+'" onclick="'+(confirmed?'':'toggleSuppPending(&quot;dha&quot;)')+'" style="'+p+'"></div></div>';
   html += '<div class="science-card"><div class="science-title">📚 科学依据</div><div class="science-text">《中国儿童维生素A、维生素D临床应用专家共识（2024）》：<b>每日持续补充AD，不建议与D3交替</b>。交替会降低依从性。维生素A让D的生物活性提升 <b>130%</b>。建议补充至 <b>青春期</b>。</div></div>';
-
   if (confirmed) {
-    html += `<div class="confirm-row"><span class="confirm-done">✅ 已打卡</span><button class="confirm-edit-btn" onclick="unconfirmSupps()">修改</button></div>`;
+    html += '<div class="confirm-row"><span class="confirm-done">✅ 已打卡</span><button class="confirm-edit-btn" onclick="unconfirmSupps()">修改</button></div>';
   } else {
-    html += `<div class="confirm-row"><button class="confirm-btn"${!hasAny?' disabled':''} onclick="confirmSupps()">✅ 确认打卡</button></div>`;
+    html += '<div class="confirm-row"><button class="confirm-btn"'+(hasAny?'':' disabled')+' onclick="confirmSupps()">✅ 确认打卡</button></div>';
     if (!hasAny) html += '<div class="confirm-hint">请先勾选已服用的补充剂，然后确认打卡</div>';
   }
-
   document.getElementById('suppsBody').innerHTML = html;
 }
 function toggleSuppPending(p) { state.supplements[p] = !state.supplements[p]; renderSupps(); updateChipsOnly(); }
@@ -1135,40 +1473,44 @@ function renderChips() {
     else if (cond.partial) { cls='partial'; txt=cond.txt2||'部分'; }
     el.className='section-chip '+cls; el.textContent=txt;
   }
-  // Feeding: count confirmed meals
   let mealsConfirmed=0, mealsPartial=0;
   for (const m of MEALS) {
     if (state.feeding[m.id]?.completed) mealsConfirmed++;
     else if (state.feeding[m.id] && Object.values(state.feeding[m.id].items||{}).some(i=>i.checked)) mealsPartial++;
   }
   chip('Feeding',{done:mealsConfirmed>=5,partial:mealsConfirmed>=2||mealsPartial>=1,txt:'已完成',txt2:'部分'});
-
-  // Activity: confirmed status
   const aConfirmed = state.activity.confirmed === true;
   const hasAct = state.activity.outdoor_am || state.activity.outdoor_pm || state.activity.walking || Object.keys(state.activity.games||{}).length > 0;
   chip('Activity',{done:aConfirmed,partial:hasAct,txt:'已打卡',txt2:'编辑中'});
-
-  // Sleep: confirmed status
   const sConfirmed = state.sleep.confirmed === true;
   const hasSleep = (state.sleep.night + state.sleep.nap_am + state.sleep.nap_pm) > 0;
   chip('Sleep',{done:sConfirmed,partial:hasSleep,txt:'已打卡',txt2:'编辑中'});
-
-  // Water: confirmed status
   const wConfirmed = state.water.confirmed === true;
   const hasWater = (state.water.records||[]).length > 0;
   chip('Water',{done:wConfirmed,partial:hasWater,txt:'已打卡',txt2:'编辑中'});
-
-  // Supps: confirmed status
   const supConfirmed = state.supplements.confirmed === true;
   const hasSupps = state.supplements.ad || state.supplements.dha;
   chip('Supps',{done:supConfirmed,partial:hasSupps,txt:'已打卡',txt2:'编辑中'});
+
+  // Measurement chip
+  const profile = getBabyProfile();
+  const m = profile.measurements;
+  const hasMeasure = m.height || m.weight || m.foot;
+  const mEl = document.getElementById('chipMeasure');
+  if (hasMeasure) {
+    mEl.style.display = 'inline';
+    mEl.className = 'section-chip done';
+    mEl.textContent = '已记录';
+  } else {
+    mEl.style.display = 'inline';
+    mEl.className = 'section-chip none';
+    mEl.textContent = '未记录';
+  }
 }
 
 // ========== COMPREHENSIVE ANALYSIS ==========
 function renderAnalysis() {
   const ref = getAgeRef();
-
-  // Diet analysis
   let milk=0,grain=0,veggie=0,fruit=0,meat=0;
   for (const [mid, meal] of Object.entries(state.feeding)) {
     const items = meal.items||{};
@@ -1194,6 +1536,56 @@ function renderAnalysis() {
   const totalSleep = state.sleep.night+state.sleep.nap_am+state.sleep.nap_pm;
 
   let html = '';
+
+  // 0. Growth & Development (NEW)
+  const profile = getBabyProfile();
+  const ageM = profile.birthday ? calcAgeMonths(profile.birthday) : 12;
+  const gender = profile.gender || 'boy';
+  const m = profile.measurements;
+
+  if (m.height?.value || m.weight?.value) {
+    html += '<div class="analysis-dim"><div class="analysis-dim-title">📏 生长发育 <span style="font-size:11px;font-weight:400;color:var(--text2)">（WHO标准，'+ageM+'个月'+(gender==='boy'?'男':'女')+'童）</span></div>';
+
+    if (m.height?.value) {
+      const hRef = getGrowthRef(gender, 'height', ageM);
+      const hEval = evaluateGrowth(m.height.value, hRef);
+      const hPct = hRef ? Math.min(100, Math.round(m.height.value / hRef.p50 * 100)) : 0;
+      html += '<div class="analysis-item"><div class="analysis-header"><span class="analysis-name">📏 身高</span><span class="analysis-status '+(hEval?.level||'ok')+'">'+(hEval?.label||'--')+'</span></div>';
+      html += '<div class="analysis-bar"><div class="analysis-fill '+(hEval?.level||'ok')+'" style="width:'+hPct+'%"></div></div>';
+      html += '<div class="analysis-detail">实际 '+m.height.value+' cm / 参考 P50: '+hRef.p50+' cm (P3-P97: '+hRef.p3+'-'+hRef.p97+' cm)</div>';
+      if (hEval?.desc) html += '<div class="growth-advice '+hEval.level+'">💡 '+hEval.desc+'</div>';
+      html += '</div>';
+    }
+
+    if (m.weight?.value) {
+      const wRef = getGrowthRef(gender, 'weight', ageM);
+      const wEval = evaluateGrowth(m.weight.value, wRef);
+      const wPct = wRef ? Math.min(100, Math.round(m.weight.value / wRef.p50 * 100)) : 0;
+      html += '<div class="analysis-item"><div class="analysis-header"><span class="analysis-name">⚖️ 体重</span><span class="analysis-status '+(wEval?.level||'ok')+'">'+(wEval?.label||'--')+'</span></div>';
+      html += '<div class="analysis-bar"><div class="analysis-fill '+(wEval?.level||'ok')+'" style="width:'+wPct+'%"></div></div>';
+      html += '<div class="analysis-detail">实际 '+m.weight.value+' kg / 参考 P50: '+wRef.p50+' kg (P3-P97: '+wRef.p3+'-'+wRef.p97+' kg)</div>';
+      if (wEval?.desc) html += '<div class="growth-advice '+wEval.level+'">💡 '+wEval.desc+'</div>';
+      html += '</div>';
+    }
+
+    if (m.foot?.value) {
+      const fRef = getFootRef(ageM);
+      html += '<div class="analysis-item"><div class="analysis-header"><span class="analysis-name">👣 脚长</span><span class="analysis-status ok">参考 '+fRef+' cm</span></div>';
+      html += '<div class="analysis-detail">实际 '+m.foot.value+' cm / 同龄参考 '+fRef+' cm（用于选鞋参考）</div></div>';
+    }
+
+    if (m.height?.value && m.weight?.value && gender) {
+      const bmi = Math.round(m.weight.value / ((m.height.value/100) * (m.height.value/100)) * 10) / 10;
+      let bmiAdvice = '';
+      if (bmi < 13) bmiAdvice = '偏瘦，注意加强蛋白质摄入';
+      else if (bmi > 18) bmiAdvice = '偏重，注意控制零食和糖分摄入';
+      else bmiAdvice = '体型匀称，保持均衡饮食';
+      html += '<div class="analysis-item"><div class="analysis-header"><span class="analysis-name">📐 BMI指数</span><span class="analysis-status ok">'+bmi+'</span></div>';
+      html += '<div class="analysis-detail">BMI = '+m.weight.value+' ÷ ('+(m.height.value/100)+'²) = '+bmi+' · '+bmiAdvice+'</div></div>';
+    }
+
+    html += '</div>';
+  }
 
   // 1. Diet
   html += '<div class="analysis-dim"><div class="analysis-dim-title">🍽️ 饮食摄入</div>';
@@ -1236,8 +1628,8 @@ function renderAnalysis() {
 
   // 6. Milestones
   html += '<div class="analysis-dim"><div class="analysis-dim-title">📏 发育里程碑 <span style="font-size:11px;font-weight:400;color:var(--text2)">（参考对照）</span></div>';
-  for (const m of (ref.milestones||[])) {
-    html += `<div style="padding:8px 12px;font-size:13px;color:var(--text2);display:flex;align-items:center;gap:8px"><span style="color:var(--blue)">○</span> ${m}</div>`;
+  for (const mile of (ref.milestones||[])) {
+    html += '<div style="padding:8px 12px;font-size:13px;color:var(--text2);display:flex;align-items:center;gap:8px"><span style="color:var(--blue)">○</span> '+mile+'</div>';
   }
   html += '</div>';
 
@@ -1250,15 +1642,9 @@ function renderAnalysisItem(c, type) {
   const cls = pct >= 80 ? 'ok' : pct >= 40 ? 'warn' : 'bad';
   let statusText = pct >= 80 ? '达标 ✓' : pct >= 40 ? '不足 ⚠' : '严重不足 ✗';
   if (type === 'count') statusText = c.actual >= c.refMin ? '已完成 ✓' : '未完成 ✗';
-
-  let refText = `参考 ${c.refMin}${c.refMax!==c.refMin?'-'+c.refMax:''}${c.unit}`;
+  let refText = '参考 '+c.refMin+(c.refMax!==c.refMin?'-'+c.refMax:'')+c.unit;
   if (type === 'count') refText = '建议每日补充';
-
-  return `<div class="analysis-item">
-    <div class="analysis-header"><span class="analysis-name">${c.name}</span><span class="analysis-status ${cls}">${statusText}</span></div>
-    <div class="analysis-bar"><div class="analysis-fill ${cls}" style="width:${Math.min(pct,100)}%"></div></div>
-    <div class="analysis-detail">实际 ${c.actual}${c.unit} / ${refText}</div>
-  </div>`;
+  return '<div class="analysis-item"><div class="analysis-header"><span class="analysis-name">'+c.name+'</span><span class="analysis-status '+cls+'">'+statusText+'</span></div><div class="analysis-bar"><div class="analysis-fill '+cls+'" style="width:'+Math.min(pct,100)+'%"></div></div><div class="analysis-detail">实际 '+c.actual+c.unit+' / '+refText+'</div></div>';
 }
 
 // ========== ALERTS ==========
@@ -1288,65 +1674,75 @@ function renderAlerts() {
     if (mid==='dinner' && ((items.meat2?.checked&&items.meat2.qty>0)||items.meat?.checked)) hasDinnerMeat=true;
   }
 
-  if (milk<ref.milk.min) alerts.push({level:'danger',title:'奶量不足',desc:`今日 ${milk}ml，参考 ${ref.milk.min}-${ref.milk.max}ml`});
-  else if (milk<ref.milk.min*0.9) alerts.push({level:'warning',title:'奶量略低',desc:`今日 ${milk}ml，参考 ${ref.milk.min}-${ref.milk.max}ml`});
+  if (milk<ref.milk.min) alerts.push({level:'danger',title:'奶量不足',desc:'今日 '+milk+'ml，参考 '+ref.milk.min+'-'+ref.milk.max+'ml'});
+  else if (milk<ref.milk.min*0.9) alerts.push({level:'warning',title:'奶量略低',desc:'今日 '+milk+'ml，参考 '+ref.milk.min+'-'+ref.milk.max+'ml'});
   if (fruit===0) alerts.push({level:'danger',title:'未摄入水果',desc:'上午和下午加餐各一份水果'});
   if (veggie===0) alerts.push({level:'danger',title:'未摄入蔬菜',desc:'午晚餐应至少含一份蔬菜'});
   if (meat===0) alerts.push({level:'danger',title:'未摄入肉禽蛋',desc:'蛋白质对发育至关重要'});
-  if (grain>ref.grain.max*1.2) alerts.push({level:'warning',title:'谷物偏多',desc:`今日 ${grain}克，参考 ${ref.grain.min}-${ref.grain.max}克`});
+  if (grain>ref.grain.max*1.2) alerts.push({level:'warning',title:'谷物偏多',desc:'今日 '+grain+'克，参考 '+ref.grain.min+'-'+ref.grain.max+'克'});
   if (!hasDinnerMeat && Object.values(state.feeding.dinner?.items||{}).some(i=>i.checked)) {
     alerts.push({level:'info',title:'晚餐缺蛋白质',desc:'建议搭配肉/鱼/豆制品'});
   }
 
   const outdoor = (state.activity.outdoor_am?state.activity.outdoor_am_min:0)+(state.activity.outdoor_pm?state.activity.outdoor_pm_min:0);
-  if (outdoor===0) alerts.push({level:'danger',title:'无户外活动',desc:`建议每天至少 ${ref.outdoor.min} 分钟户外`});
-  else if (outdoor<ref.outdoor.min) alerts.push({level:'warning',title:`户外仅 ${outdoor} 分钟`,desc:`参考 ${ref.outdoor.min}-${ref.outdoor.max} 分钟`});
+  if (outdoor===0) alerts.push({level:'danger',title:'无户外活动',desc:'建议每天至少 '+ref.outdoor.min+' 分钟户外'});
+  else if (outdoor<ref.outdoor.min) alerts.push({level:'warning',title:'户外仅 '+outdoor+' 分钟',desc:'参考 '+ref.outdoor.min+'-'+ref.outdoor.max+' 分钟'});
   const gameCount = Object.keys(state.activity.games||{}).length;
-  if (gameCount<2) alerts.push({level:'info',title:'亲子互动偏少',desc:`仅 ${gameCount} 项游戏，建议 3 项以上`});
+  if (gameCount<2) alerts.push({level:'info',title:'亲子互动偏少',desc:'仅 '+gameCount+' 项游戏，建议 3 项以上'});
 
   const totalSleep = state.sleep.night+state.sleep.nap_am+state.sleep.nap_pm;
-  if (totalSleep>0 && totalSleep<ref.sleep.total*0.85) alerts.push({level:'warning',title:`睡眠仅 ${totalSleep}h`,desc:`本年龄段需要约 ${ref.sleep.total} 小时睡眠`});
+  if (totalSleep>0 && totalSleep<ref.sleep.total*0.85) alerts.push({level:'warning',title:'睡眠仅 '+totalSleep+'h',desc:'本年龄段需要约 '+ref.sleep.total+' 小时睡眠'});
 
   const tw = (state.water.records||[]).reduce((s,r)=>s+(r.amount||0),0);
-  if (tw<ref.water.min*0.75) alerts.push({level:'danger',title:`饮水仅 ${tw}ml`,desc:`参考每天 ${ref.water.min}-${ref.water.max}ml`});
+  if (tw<ref.water.min*0.75) alerts.push({level:'danger',title:'饮水仅 '+tw+'ml',desc:'参考每天 '+ref.water.min+'-'+ref.water.max+'ml'});
 
   if (!state.supplements.ad) alerts.push({level:'danger',title:'未补充维生素AD',desc:'每天必须补充 AD 滴剂'});
   if (!state.supplements.dha) alerts.push({level:'info',title:'未补充 DHA',desc:'可每周 2-3 次补充'});
+
+  // Growth alerts (NEW)
+  const profile = getBabyProfile();
+  const ageM = profile.birthday ? calcAgeMonths(profile.birthday) : 12;
+  const gender = profile.gender || 'boy';
+  const meas = profile.measurements;
+
+  if (meas.height?.value) {
+    const hRef = getGrowthRef(gender, 'height', ageM);
+    const hEval = evaluateGrowth(meas.height.value, hRef);
+    if (hEval?.level === 'bad') {
+      alerts.push({level:'danger',title:'身高落后于同龄标准',desc:'身高 '+meas.height.value+'cm，低于同龄P3（'+hRef.p3+'cm），建议咨询儿科医生评估生长发育'});
+    } else if (hEval?.level === 'warn' && hEval.pct < 0.95) {
+      alerts.push({level:'warning',title:'身高略低于同龄平均',desc:'身高 '+meas.height.value+'cm，同龄P50为 '+hRef.p50+'cm。建议保证充足睡眠、均衡营养和户外运动'});
+    }
+  }
+
+  if (meas.weight?.value) {
+    const wRef = getGrowthRef(gender, 'weight', ageM);
+    const wEval = evaluateGrowth(meas.weight.value, wRef);
+    if (wEval?.level === 'bad') {
+      alerts.push({level:'danger',title:'体重落后于同龄标准',desc:'体重 '+meas.weight.value+'kg，低于同龄P3（'+wRef.p3+'kg），建议咨询儿科医生'});
+    } else if (wEval?.level === 'warn' && meas.weight.value > wRef.p97) {
+      alerts.push({level:'warning',title:'体重偏高',desc:'体重 '+meas.weight.value+'kg，超出同龄P97（'+wRef.p97+'kg），注意均衡饮食和多运动'});
+    }
+  }
 
   document.getElementById('alertDot').style.display = alerts.filter(a=>a.level==='danger').length>0?'block':'none';
 
   document.getElementById('alertsContent').innerHTML = alerts.length===0
     ? '<div class="no-alerts"><div style="font-size:40px;margin-bottom:8px">🎉</div>今日所有指标均达标！</div>'
-    : alerts.map(a => `<div class="alert-item ${a.level}"><div class="alert-title">${a.level==='danger'?'🔴':a.level==='warning'?'🟠':'🔵'} ${a.title}</div><div class="alert-desc">${a.desc}</div></div>`).join('');
+    : alerts.map(a => '<div class="alert-item '+a.level+'"><div class="alert-title">'+(a.level==='danger'?'🔴':a.level==='warning'?'🟠':'🔵')+' '+a.title+'</div><div class="alert-desc">'+a.desc+'</div></div>').join('');
 }
 
 // ========== ROOM SYNC ==========
 function renderRoomPanel() {
   const sync = getSyncConfig();
   const content = document.getElementById('roomContent');
-
   if (sync.mode === 'server' && sync.url) {
-    const memberHtml = `<span class="member-chip me">${sync.role==='creator'?'👑 ':''}${sync.nickname||'我'}</span>` + (sync.members||[]).map(m => `<span class="member-chip">${m.nickname||m}${m.role==='creator'?' 👑':''}</span>`).join('');
-    content.innerHTML = `
-      <div class="room-code-display">
-        <div class="room-code-label">家庭房间码</div>
-        <div class="room-code-val">${sync.roomCode||'---'}</div>
-      </div>
-      <div class="room-members">${memberHtml}</div>
-      <div class="room-btns"><button class="room-btn-sm" onclick="switchToLocal()">切换到本机</button></div>`;
+    const memberHtml = '<span class="member-chip me">'+(sync.role==='creator'?'👑 ':'')+(sync.nickname||'我')+'</span>' + (sync.members||[]).map(m => '<span class="member-chip">'+(m.nickname||m)+(m.role==='creator'?' 👑':'')+'</span>').join('');
+    content.innerHTML = '<div class="room-code-display"><div class="room-code-label">家庭房间码</div><div class="room-code-val">'+(sync.roomCode||'---')+'</div></div><div class="room-members">'+memberHtml+'</div><div class="room-btns"><button class="room-btn-sm" onclick="switchToLocal()">切换到本机</button></div>';
   } else if (sync.mode === 'create') {
-    content.innerHTML = `
-      <div style="text-align:center;margin-bottom:12px"><div style="font-size:13px;color:var(--text2);margin-bottom:4px">���建家庭房间</div><div class="room-code-val">${sync.tempCode||'------'}</div></div>
-      <div class="sync-server-input"><input class="sync-input" type="text" id="serverUrl" placeholder="服务器地址" value="${sync.url||''}"><button class="room-btn-sm primary" onclick="connectAndCreate()">创建并连接</button></div>
-      <div class="room-btns"><button class="room-btn-sm" onclick="switchToLocal()">取消</button></div>`;
+    content.innerHTML = '<div style="text-align:center;margin-bottom:12px"><div style="font-size:13px;color:var(--text2);margin-bottom:4px">创建家庭房间</div><div class="room-code-val">'+(sync.tempCode||'------')+'</div></div><div class="sync-server-input"><input class="sync-input" type="text" id="serverUrl" placeholder="服务器地址" value="'+(sync.url||'')+'"><button class="room-btn-sm primary" onclick="connectAndCreate()">创建并连接</button></div><div class="room-btns"><button class="room-btn-sm" onclick="switchToLocal()">取消</button></div>';
   } else {
-    content.innerHTML = `
-      <div class="room-hint-text" style="margin-bottom:12px">开启家庭同步，爷爷奶奶一起记录，数据统一分析。</div>
-      <div class="sync-server-input">
-        <input class="sync-input" type="text" id="serverUrl" value="${window.location.origin}" placeholder="后端服务地址">
-        <button class="room-btn-sm primary" onclick="showJoinOrCreate()">连接服务器</button>
-      </div>
-      <div class="room-hint-text" style="margin-top:6px;font-size:10px">提示：当前为<b>本机记录模式</b></div>`;
+    content.innerHTML = '<div class="room-hint-text" style="margin-bottom:12px">开启家庭同步，爷爷奶奶一起记录，数据统一分析。</div><div class="sync-server-input"><input class="sync-input" type="text" id="serverUrl" value="'+window.location.origin+'" placeholder="后端服务地址"><button class="room-btn-sm primary" onclick="showJoinOrCreate()">连接服务器</button></div><div class="room-hint-text" style="margin-top:6px;font-size:10px">提示：当前为<b>本机记录模式</b></div>';
   }
 }
 
@@ -1367,12 +1763,7 @@ function showJoinOrCreate() {
   const url = document.getElementById('serverUrl')?.value?.trim();
   if (!url) { alert('请输入服务器地址'); return; }
   const content = document.getElementById('roomContent');
-  content.innerHTML = `
-    <div style="display:flex;gap:8px;margin-bottom:12px">
-      <button class="room-btn-sm primary" onclick="goCreate('${url}')" style="flex:1">🏠 创建房间</button>
-      <button class="room-btn-sm" onclick="goJoin('${url}')" style="flex:1;background:var(--blue-l);border-color:var(--blue);color:var(--blue)">🔑 加入房间</button>
-    </div>
-    <div class="room-hint-text">创建：生成 6 位码分享给家人<br>加入：输入家人分享的房间码</div>`;
+  content.innerHTML = '<div style="display:flex;gap:8px;margin-bottom:12px"><button class="room-btn-sm primary" onclick="goCreate(\''+url+'\')" style="flex:1">🏠 创建房间</button><button class="room-btn-sm" onclick="goJoin(\''+url+'\')" style="flex:1;background:var(--blue-l);border-color:var(--blue);color:var(--blue)">🔑 加入房间</button></div><div class="room-hint-text">创建：生成 6 位码分享给家人<br>加入：输入家人分享的房间码</div>';
 }
 function goCreate(url) {
   setSyncConfig({ mode:'create', url, tempCode: String(Math.floor(100000+Math.random()*900000)) });
@@ -1386,31 +1777,21 @@ async function connectAndCreate() {
     const profile = getBabyProfile();
     const res = await fetch(url+'/api/rooms', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ name: profile.name||'宝宝', nickname: cfg.nickname||'爸爸' })
+      body: JSON.stringify({ name: profile.name||'安安', nickname: cfg.nickname||'爸爸' })
     });
     const data = await res.json();
     if (data.error) { alert(data.error); return; }
-
-    // Push baby profile to server
     if (profile.birthday) {
       fetch(url+'/api/baby-profile', {
         method:'PUT',
-        headers:{
-          'Content-Type':'application/json',
-          'x-auth-token':data.user.token, 'x-user-id':data.user.id, 'x-room-id':data.room.id
-        },
-        body: JSON.stringify({ name: profile.name, birthday: profile.birthday })
+        headers:{'Content-Type':'application/json','x-auth-token':data.user.token,'x-user-id':data.user.id,'x-room-id':data.room.id},
+        body: JSON.stringify({ name: profile.name, birthday: profile.birthday, gender: profile.gender, city: profile.city })
       }).catch(()=>{});
     }
-
-    setSyncConfig({
-      mode:'server', url, roomCode: data.room.code, roomId: data.room.id,
-      nickname: data.user.nickname, userId: data.user.id, token: data.user.token,
-      role: data.user.role, members: []
-    });
-    document.getElementById('syncStatus').innerHTML = '<span class="sync-dot online"></span> 同步';
-    document.getElementById('roomBtn').className = 'app-badge online';
-    document.getElementById('roomBtn').textContent = '码: '+data.room.code;
+    setSyncConfig({mode:'server',url,roomCode:data.room.code,roomId:data.room.id,nickname:data.user.nickname,userId:data.user.id,token:data.user.token,role:data.user.role,members:[]});
+    document.getElementById('syncStatus').innerHTML='<span class="sync-dot online"></span> 同步';
+    document.getElementById('roomBtn').className='app-badge online';
+    document.getElementById('roomBtn').textContent='码: '+data.room.code;
     updateRoleUI();
     renderRoomPanel();
     syncToServer();
@@ -1429,20 +1810,13 @@ function goJoin(url) {
       });
       const data = await res.json();
       if (data.error) { alert(data.error); return; }
-
-      // Load baby profile from server
       if (data.baby?.name) {
-        saveBabyProfile({ name: data.baby.name, birthday: data.baby.birthday||'' });
+        saveBabyProfile({ name: data.baby.name, birthday: data.baby.birthday||'', gender: data.baby.gender||'boy', city: data.baby.city||'', measurements: data.baby.measurements||{height:null,weight:null,foot:null} });
       }
-
-      setSyncConfig({
-        mode:'server', url, roomCode: data.room.code, roomId: data.room.id,
-        nickname: data.user.nickname, userId: data.user.id, token: data.user.token,
-        role: data.user.role, members: data.members||[]
-      });
-      document.getElementById('syncStatus').innerHTML = '<span class="sync-dot online"></span> 同步';
-      document.getElementById('roomBtn').className = 'app-badge online';
-      document.getElementById('roomBtn').textContent = '码: '+data.room.code;
+      setSyncConfig({mode:'server',url,roomCode:data.room.code,roomId:data.room.id,nickname:data.user.nickname,userId:data.user.id,token:data.user.token,role:data.user.role,members:data.members||[]});
+      document.getElementById('syncStatus').innerHTML='<span class="sync-dot online"></span> 同步';
+      document.getElementById('roomBtn').className='app-badge online';
+      document.getElementById('roomBtn').textContent='码: '+data.room.code;
       updateRoleUI();
       renderRoomPanel();
       renderAll();
@@ -1474,7 +1848,10 @@ document.getElementById('appScreen').style.display = 'block';
 updateHeaderTitle();
 renderAll();
 
-// Background sync
+// Refresh weather on init
+refreshWeather();
+
+// Background sync and weather refresh
 (function initSync() {
   const cfg = getSyncConfig();
   if (cfg.mode === 'server' && cfg.url) {
@@ -1482,34 +1859,29 @@ renderAll();
     document.getElementById('roomBtn').className = 'app-badge online';
     document.getElementById('roomBtn').textContent = '码: '+(cfg.roomCode||'---');
     updateRoleUI();
-
-    // Load today's records from server on startup
     loadFromServer();
-
-    // Poll for members and records every 15s
     setInterval(() => {
       fetch(cfg.url+'/api/room', {
         headers: { 'x-auth-token':cfg.token, 'x-user-id':cfg.userId, 'x-room-id':cfg.roomId }
       }).then(r=>r.json()).then(data=>{
         if (data.users && data.room) {
           setSyncConfig({ ...cfg, members: data.users });
-          if (data.baby?.name) saveBabyProfile({ name: data.baby.name, birthday: data.baby.birthday||'' });
+          if (data.baby?.name) saveBabyProfile({ name: data.baby.name, birthday: data.baby.birthday||'', gender: data.baby.gender||'boy', city: data.baby.city||'', measurements: data.baby.measurements||{height:null,weight:null,foot:null} });
         }
       }).catch(()=>{});
-      // Refresh records from server
       loadFromServer();
     }, 15000);
-
-    // Fetch baby profile from server
     fetch(cfg.url+'/api/baby-profile', {
       headers: { 'x-auth-token':cfg.token, 'x-user-id':cfg.userId, 'x-room-id':cfg.roomId }
     }).then(r=>r.json()).then(p=>{
-      if (p?.name && p.name !== '宝宝') saveBabyProfile({ name: p.name, birthday: p.birthday||'' });
+      if (p?.name && p.name !== '安安') saveBabyProfile({ name: p.name, birthday: p.birthday||'', gender: p.gender||'boy', city: p.city||'' });
     }).catch(()=>{});
   }
+
+  // Refresh weather every hour
+  setInterval(() => refreshWeather(), 3600000);
 })();
 
-// Register service worker for PWA offline support
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js').then(function(reg) {
     console.log('SW registered:', reg.scope);

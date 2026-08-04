@@ -92,6 +92,9 @@ app.post('/api/rooms', (req, res) => {
   store.baby_profiles[roomId] = {
     name: babyName,
     birthday: '',
+    gender: 'boy',
+    city: '',
+    measurements: { height: null, weight: null, foot: null },
     created_by: userId
   };
   saveStore();
@@ -153,6 +156,10 @@ app.get('/api/room', (req, res) => {
 app.get('/api/baby-profile', (req, res) => {
   authMiddleware(req, res, () => {
     const profile = store.baby_profiles[req.roomId] || { name: store.rooms[req.roomId]?.baby_name || '宝宝' };
+    // Ensure new fields exist for backward compat
+    if (!profile.gender) profile.gender = 'boy';
+    if (!profile.city) profile.city = '';
+    if (!profile.measurements) profile.measurements = { height: null, weight: null, foot: null };
     res.json(profile);
   });
 });
@@ -161,16 +168,18 @@ app.get('/api/baby-profile', (req, res) => {
 app.put('/api/baby-profile', (req, res) => {
   authMiddleware(req, res, () => {
     creatorOnly(req, res, () => {
-      const { name, birthday } = req.body || {};
+      const { name, birthday, gender, city, measurements } = req.body || {};
       if (!store.baby_profiles[req.roomId]) {
-        store.baby_profiles[req.roomId] = { name: '宝宝', birthday: '', created_by: req.user.id };
+        store.baby_profiles[req.roomId] = { name: '宝宝', birthday: '', gender: 'boy', city: '', measurements: { height: null, weight: null, foot: null }, created_by: req.user.id };
       }
       if (name) {
         store.baby_profiles[req.roomId].name = name;
-        // Also update room baby_name for backward compat
         if (store.rooms[req.roomId]) store.rooms[req.roomId].baby_name = name;
       }
       if (birthday !== undefined) store.baby_profiles[req.roomId].birthday = birthday;
+      if (gender !== undefined) store.baby_profiles[req.roomId].gender = gender;
+      if (city !== undefined) store.baby_profiles[req.roomId].city = city;
+      if (measurements !== undefined) store.baby_profiles[req.roomId].measurements = measurements;
       saveStore();
       res.json(store.baby_profiles[req.roomId]);
     });
