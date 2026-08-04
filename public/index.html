@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="宝宝喂养追踪">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍼</text></svg>">
 <title id="pageTitle">宝宝喂养追踪</title>
 <style>
@@ -475,6 +476,118 @@ function saveData(data) {
   updateFeedingPatterns(data);
 
   renderAll();
+
+  // Sync to server if in sync mode (debounced)
+  scheduleSync();
+}
+
+// ========== SERVER SYNC ==========
+let syncTimer = null;
+let isLoadingFromServer = false;
+
+function scheduleSync() {
+  if (isLoadingFromServer) return;
+  if (syncTimer) clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => syncToServer(), 800);
+}
+
+function syncToServer() {
+  const cfg = getSyncConfig();
+  if (cfg.mode !== 'server' || !cfg.url) return;
+
+  const sections = [
+    { name: 'feeding', data: { meals: state.feeding } },
+    { name: 'activity', data: {
+        outdoor_am: state.activity.outdoor_am ? state.activity.outdoor_am_min : 0,
+        outdoor_pm: state.activity.outdoor_pm ? state.activity.outdoor_pm_min : 0,
+        walking: state.activity.walking ? state.activity.walking_min : 0,
+        games: state.activity.games || []
+      }
+    },
+    { name: 'sleep', data: state.sleep },
+    { name: 'water', data: state.water },
+    { name: 'supplements', data: state.supplements }
+  ];
+
+  for (const sec of sections) {
+    fetch(cfg.url + '/api/records', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-auth-token': cfg.token, 'x-user-id': cfg.userId, 'x-room-id': cfg.roomId
+      },
+      body: JSON.stringify({ date: TODAY, section: sec.name, data: sec.data })
+    }).catch(() => {});
+  }
+}
+
+async function loadFromServer() {
+  const cfg = getSyncConfig();
+  if (cfg.mode !== 'server' || !cfg.url) return;
+
+  try {
+    const res = await fetch(cfg.url + '/api/records/' + TODAY, {
+      headers: { 'x-auth-token': cfg.token, 'x-user-id': cfg.userId, 'x-room-id': cfg.roomId }
+    });
+    const result = await res.json();
+    if (!result.merged) return;
+
+    isLoadingFromServer = true;
+    const merged = result.merged;
+    const newState = defaultData();
+
+    // Feeding: unwrap meals
+    if (merged.feeding?.meals) {
+      for (const [mealId, mealData] of Object.entries(merged.feeding.meals)) {
+        if (!newState.feeding[mealId]) continue;
+        newState.feeding[mealId].time = mealData.time || newState.feeding[mealId].time;
+        newState.feeding[mealId].completed = mealData.completed || false;
+        for (const [foodId, foodData] of Object.entries(mealData.items || {})) {
+          if (!newState.feeding[mealId].items[foodId]) continue;
+          newState.feeding[mealId].items[foodId].checked = foodData.checked || false;
+          newState.feeding[mealId].items[foodId].qty = foodData.qty || 0;
+        }
+      }
+    }
+
+    // Activity: convert numbers to bool+min
+    if (merged.activity) {
+      const a = merged.activity;
+      if (a.outdoor_am > 0) { newState.activity.outdoor_am = true; newState.activity.outdoor_am_min = a.outdoor_am; }
+      if (a.outdoor_pm > 0) { newState.activity.outdoor_pm = true; newState.activity.outdoor_pm_min = a.outdoor_pm; }
+      if (a.walking > 0) { newState.activity.walking = true; newState.activity.walking_min = a.walking; }
+      if (a.games) newState.activity.games = a.games;
+    }
+
+    // Sleep
+    if (merged.sleep) {
+      newState.sleep.night = merged.sleep.night || 0;
+      newState.sleep.nap_am = merged.sleep.nap_am || 0;
+      newState.sleep.nap_pm = merged.sleep.nap_pm || 0;
+    }
+
+    // Water
+    if (merged.water?.records) {
+      newState.water.records = merged.water.records;
+    }
+
+    // Supplements
+    if (merged.supplements) {
+      newState.supplements.ad = merged.supplements.ad || false;
+      newState.supplements.dha = merged.supplements.dha || false;
+    }
+
+    state = newState;
+    let all = {};
+    try { all = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch(e) {}
+    all[TODAY] = newState;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+    renderAll();
+    isLoadingFromServer = false;
+  } catch(e) {
+    isLoadingFromServer = false;
+    console.error('Load from server failed:', e);
+  }
 }
 
 function getFeedingPatterns() {
@@ -571,7 +684,8 @@ function updateHeaderTitle() {
   const name = profile.name || '宝宝';
   document.getElementById('babyNameDisplay').textContent = name + '喂养追踪';
   document.getElementById('pageTitle').textContent = name + '喂养追踪';
-  document.querySelector('meta[name="apple-mobile-web-app-title"]').content = name + '喂养追踪';
+  const metaTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+  if (metaTitle) metaTitle.content = name + '喂养追踪';
 
   const ageStr = getAgeStr();
   const tag = document.getElementById('ageTag');
@@ -1107,6 +1221,7 @@ async function connectAndCreate() {
     document.getElementById('roomBtn').textContent = '码: '+data.room.code;
     updateRoleUI();
     renderRoomPanel();
+    syncToServer();
     alert('房间创建成功！房间码：'+data.room.code+'\n分享给家人即可加入');
   } catch(e) { alert('连接失败：'+e.message); }
 }
@@ -1139,6 +1254,7 @@ function goJoin(url) {
       updateRoleUI();
       renderRoomPanel();
       renderAll();
+      loadFromServer();
       alert('加入成功！已和 '+(data.members||[]).map(m=>m.nickname).join('、')+' 一起记录');
     } catch(e) { alert('加入失败：'+e.message); }
   })();
@@ -1175,7 +1291,10 @@ renderAll();
     document.getElementById('roomBtn').textContent = '码: '+(cfg.roomCode||'---');
     updateRoleUI();
 
-    // Poll for members
+    // Load today's records from server on startup
+    loadFromServer();
+
+    // Poll for members and records every 15s
     setInterval(() => {
       fetch(cfg.url+'/api/room', {
         headers: { 'x-auth-token':cfg.token, 'x-user-id':cfg.userId, 'x-room-id':cfg.roomId }
@@ -1185,7 +1304,9 @@ renderAll();
           if (data.baby?.name) saveBabyProfile({ name: data.baby.name, birthday: data.baby.birthday||'' });
         }
       }).catch(()=>{});
-    }, 30000);
+      // Refresh records from server
+      loadFromServer();
+    }, 15000);
 
     // Fetch baby profile from server
     fetch(cfg.url+'/api/baby-profile', {
