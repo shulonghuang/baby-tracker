@@ -251,7 +251,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     <div class="app-title" id="headerTitle">🍼 <span id="babyNameDisplay">安安</span>喂养<span class="age-tag" id="ageTag" style="display:none"></span></div>
     <div class="app-right">
       <span class="sync-text" id="syncStatus"><span class="sync-dot local"></span> 本机</span>
-      <button class="icon-btn" id="settingsBtn" style="display:none" onclick="openSettings()" title="设置">⚙️</button>
+      <button class="icon-btn" id="settingsBtn" onclick="openSettings()" title="设置">⚙️</button>
       <button class="app-badge offline" id="roomBtn" onclick="toggleRoom()">👨‍👩‍👧 同步</button>
     </div>
   </div>
@@ -363,7 +363,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     </div>
 
     <!-- Measurement Section (at bottom of record tab) -->
-    <div class="section" id="secMeasure">
+    <div class="section open" id="secMeasure">
       <div class="section-header" onclick="toggleSection('secMeasure')">
         <div class="section-title">📏 安安的生长发育 <span class="section-chip" id="chipMeasure" style="display:none"></span></div>
         <span class="section-toggle">▼</span>
@@ -958,13 +958,22 @@ function renderWeather() {
 }
 
 // ========== GROWTH BANNER ==========
+function goToMeasure() {
+  switchTab('record');
+  setTimeout(() => {
+    const sec = document.getElementById('secMeasure');
+    sec.classList.add('open');
+    sec.scrollIntoView({ behavior:'smooth', block:'center' });
+  }, 200);
+}
+
 function renderGrowthBanner() {
   const profile = getBabyProfile();
   const m = profile.measurements;
   const banner = document.getElementById('growthBanner');
 
   if (!m.height && !m.weight && !m.foot) {
-    banner.innerHTML = '<div class="growth-empty">📏 暂无生长发育数据，<span style="color:var(--green);cursor:pointer" onclick="toggleSection(\'secMeasure\');document.getElementById(\'secMeasure\').classList.add(\'open\');renderMeasurements()">去记录 →</span></div>';
+    banner.innerHTML = '<div class="growth-empty">📏 暂无生长发育数据，<span style="color:var(--green);cursor:pointer;text-decoration:underline" onclick="goToMeasure()">去记录 →</span></div>';
     return;
   }
 
@@ -1141,13 +1150,8 @@ function updateHeaderTitle() {
 function updateRoleUI() {
   const cfg = getSyncConfig();
   const settingsBtn = document.getElementById('settingsBtn');
-  if (cfg.mode === 'server' && cfg.role === 'creator') {
-    settingsBtn.style.display = 'flex';
-  } else if (cfg.mode === 'local') {
-    settingsBtn.style.display = 'flex';
-  } else {
-    settingsBtn.style.display = 'none';
-  }
+  // Always show settings button
+  settingsBtn.style.display = 'flex';
 }
 
 // ========== SETTINGS ==========
