@@ -119,6 +119,16 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .bottom-summary{padding:10px 0;font-size:13px;color:var(--text2);display:flex;align-items:center;gap:8px;border-top:1px solid var(--bg);margin-top:6px}
 .bottom-summary .ref{color:var(--blue)}
 
+/* Confirm button */
+.confirm-row{display:flex;align-items:center;justify-content:center;margin-top:14px;padding-top:12px;border-top:1px solid var(--bg)}
+.confirm-btn{padding:12px 40px;border-radius:24px;font-size:15px;font-weight:700;cursor:pointer;border:none;background:var(--green);color:#fff;font-family:var(--font);transition:.2s;box-shadow:0 2px 8px rgba(138,170,148,0.3)}
+.confirm-btn:active{transform:scale(0.97);opacity:0.9}
+.confirm-btn:disabled{background:var(--border);color:var(--text2);box-shadow:none;cursor:not-allowed;transform:none;opacity:1}
+.confirm-hint{font-size:11px;color:var(--text2);text-align:center;margin-top:6px}
+.confirm-done{font-size:13px;color:var(--green);font-weight:600}
+.confirm-edit-btn{padding:5px 14px;border-radius:14px;font-size:12px;border:1.5px solid var(--green);cursor:pointer;background:transparent;color:var(--green);transition:.2s;font-family:var(--font);margin-left:12px}
+.confirm-edit-btn:active{background:var(--green-l)}
+
 /* Activity */
 .activity-row,.sleep-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bg)}
 .activity-row:last-child,.sleep-row:last-child{border-bottom:none}
@@ -316,9 +326,9 @@ const MEAL_FOODS = {
     { id:'biscuit', name:'饼干/小点心', unit:'块', ref:2, step:1 }
   ],
   lunch:[
-    { id:'rice', name:'米饭/面条', unit:'碗', ref:0.75, step:0.25 },
-    { id:'meat', name:'肉/鱼/虾', unit:'份', ref:1, step:0.5 },
-    { id:'veggie', name:'蔬菜', unit:'份', ref:1.5, step:0.5 },
+    { id:'rice', name:'米饭/面条', unit:'克', ref:50, step:10 },
+    { id:'meat', name:'肉/鱼/虾', unit:'克', ref:30, step:10 },
+    { id:'veggie', name:'蔬菜', unit:'克', ref:50, step:10 },
     { id:'soup', name:'汤', unit:'碗', ref:0.5, step:0.25 }
   ],
   afternoon_snack:[
@@ -327,9 +337,9 @@ const MEAL_FOODS = {
     { id:'snack2', name:'小点心', unit:'块', ref:1, step:1 }
   ],
   dinner:[
-    { id:'rice2', name:'米饭/面食', unit:'碗', ref:0.75, step:0.25 },
-    { id:'meat2', name:'肉/鱼/豆制品', unit:'份', ref:1, step:0.5 },
-    { id:'veggie2', name:'蔬菜', unit:'份', ref:1.5, step:0.5 }
+    { id:'rice2', name:'米饭/面食', unit:'克', ref:50, step:10 },
+    { id:'meat2', name:'肉/鱼/豆制品', unit:'克', ref:30, step:10 },
+    { id:'veggie2', name:'蔬菜', unit:'克', ref:50, step:10 }
   ],
   night_milk:[
     { id:'milk3', name:'牛奶/配方奶', unit:'ml', ref:200, step:10 }
@@ -361,10 +371,10 @@ const AGE_REFERENCES = {
     outdoor: { min: 60, max: 120 },
     water: { min: 200, max: 300 },
     milk: { min: 350, max: 500 },
-    grain: { min: 1, max: 2 },
-    veggie: { min: 1.5, max: 2.5 },
+    grain: { min: 50, max: 100 },
+    veggie: { min: 50, max: 100 },
     fruit: { min: 1, max: 2 },
-    meat: { min: 1, max: 2 },
+    meat: { min: 30, max: 60 },
     milestones: ['独立行走','说5-10个词','用杯喝水','模仿做家务']
   },
   '18-24': {
@@ -372,10 +382,10 @@ const AGE_REFERENCES = {
     outdoor: { min: 60, max: 120 },
     water: { min: 250, max: 400 },
     milk: { min: 300, max: 500 },
-    grain: { min: 1.5, max: 2.5 },
-    veggie: { min: 2, max: 3 },
+    grain: { min: 75, max: 125 },
+    veggie: { min: 75, max: 125 },
     fruit: { min: 1.5, max: 2.5 },
-    meat: { min: 1.5, max: 2.5 },
+    meat: { min: 30, max: 75 },
     milestones: ['跑步','说短句','自己吃饭','白天不穿尿布']
   },
   '24-36': {
@@ -383,10 +393,10 @@ const AGE_REFERENCES = {
     outdoor: { min: 60, max: 180 },
     water: { min: 300, max: 500 },
     milk: { min: 300, max: 400 },
-    grain: { min: 1.5, max: 3 },
-    veggie: { min: 2, max: 3.5 },
+    grain: { min: 75, max: 150 },
+    veggie: { min: 75, max: 150 },
     fruit: { min: 2, max: 3 },
-    meat: { min: 1.5, max: 3 },
+    meat: { min: 30, max: 90 },
     milestones: ['双脚跳','自己穿衣','完整句子','会问为什么']
   }
 };
@@ -768,8 +778,8 @@ function renderMealContent() {
   const foods = MEAL_FOODS[currentMeal] || [];
   const meal = state.feeding[currentMeal] || { completed:false, time:MEALS.find(m=>m.id===currentMeal)?.defaultTime||'07:30', items:{} };
   const time = meal.time || MEALS.find(m=>m.id===currentMeal)?.defaultTime||'07:30';
+  const hasConfirmed = meal.completed;
 
-  // Get pattern suggestion
   let suggestionHtml = '';
   const patterns = getFeedingPatterns();
   if (patterns && patterns[currentMeal] && patterns[currentMeal].count >= 2) {
@@ -777,25 +787,27 @@ function renderMealContent() {
     suggestionHtml = `<span class="time-suggestion" onclick="applyPatternTime('${currentMeal}','${p.avgTime}')" title="基于最近 ${p.count} 次记录的推荐时间">建议 ${p.avgTime}</span>`;
   }
 
+  const hasAnyChecked = foods.some(f => meal.items[f.id]?.checked);
+
   let html = `
     <div class="time-row">
       <span class="time-label">⏰ 时间</span>
-      <input class="time-input" type="time" value="${time}" onchange="updateMealTime('${currentMeal}',this.value)" id="time_${currentMeal}">
+      <input class="time-input" type="time" value="${time}" onchange="updateMealTimePending('${currentMeal}',this.value)" id="time_${currentMeal}">
       ${suggestionHtml}
     </div>`;
 
   html += foods.map(f => {
     const item = meal.items[f.id] || { checked:false, qty:0 };
     return `<div class="food-item">
-      <div class="food-left" onclick="toggleFood('${currentMeal}','${f.id}')">
+      <div class="food-left" onclick="toggleFoodPending('${currentMeal}','${f.id}')">
         <div class="food-check${item.checked?' checked':''}"></div>
         <span class="food-name">${f.name}</span>
       </div>
       <div class="food-right">
         ${item.checked ? `<div class="food-qty">
-          <button class="food-qty-btn" onclick="event.stopPropagation();adjustQty('${currentMeal}','${f.id}',-${f.step})">−</button>
+          <button class="food-qty-btn" onclick="event.stopPropagation();adjustQtyPending('${currentMeal}','${f.id}',-${f.step})">−</button>
           <span class="food-qty-val">${item.qty}</span>
-          <button class="food-qty-btn" onclick="event.stopPropagation();adjustQty('${currentMeal}','${f.id}',${f.step})">+</button>
+          <button class="food-qty-btn" onclick="event.stopPropagation();adjustQtyPending('${currentMeal}','${f.id}',${f.step})">+</button>
           <span class="qty-unit">${f.unit}</span>
         </div>` : ''}
         <span class="food-ref">建议 ${f.ref}${f.unit}</span>
@@ -803,22 +815,31 @@ function renderMealContent() {
     </div>`;
   }).join('');
 
+  // Confirm / Edit button
+  if (hasConfirmed) {
+    html += `<div class="confirm-row"><span class="confirm-done">✅ 已打卡</span><button class="confirm-edit-btn" onclick="unconfirmMeal('${currentMeal}')">修改</button></div>`;
+  } else {
+    html += `<div class="confirm-row"><button class="confirm-btn"${!hasAnyChecked?' disabled':''} onclick="confirmMeal('${currentMeal}')">✅ 确认打卡</button></div>`;
+    if (!hasAnyChecked) html += '<div class="confirm-hint">请先勾选食物品种，再调整数量，然后确认打卡</div>';
+  }
+
   document.getElementById('mealContent').innerHTML = html;
 }
 
 function applyPatternTime(mealId, time) {
   if (!state.feeding[mealId]) state.feeding[mealId] = { completed:false, items:{} };
   state.feeding[mealId].time = time;
-  saveData(state);
+  renderMealContent();
+  updateChipsOnly();
 }
 
-function updateMealTime(mealId, time) {
+function updateMealTimePending(mealId, time) {
   if (!state.feeding[mealId]) state.feeding[mealId] = { completed:false, items:{} };
   state.feeding[mealId].time = time;
-  saveData(state);
+  renderMealContent();
 }
 
-function toggleFood(mealId, foodId) {
+function toggleFoodPending(mealId, foodId) {
   if (!state.feeding[mealId]) state.feeding[mealId] = { completed:false, time:MEALS.find(m=>m.id===mealId)?.defaultTime||'07:30', items:{} };
   const item = state.feeding[mealId].items[foodId] || { checked:false, qty:0 };
   item.checked = !item.checked;
@@ -828,14 +849,34 @@ function toggleFood(mealId, foodId) {
   }
   if (!item.checked) item.qty = 0;
   state.feeding[mealId].items[foodId] = item;
-  state.feeding[mealId].completed = (MEAL_FOODS[mealId]||[]).every(f => state.feeding[mealId].items[f.id]?.checked);
+  // Don't save yet — wait for confirm
+  renderMealContent();
+  updateChipsOnly();
+}
+
+function adjustQtyPending(mealId, foodId, delta) {
+  if (!state.feeding[mealId]?.items[foodId]) return;
+  state.feeding[mealId].items[foodId].qty = Math.max(0, Math.round((state.feeding[mealId].items[foodId].qty + delta) * 100) / 100);
+  renderMealContent();
+}
+
+function confirmMeal(mealId) {
+  if (!state.feeding[mealId]) state.feeding[mealId] = { completed:false, items:{} };
+  const foods = MEAL_FOODS[mealId] || [];
+  state.feeding[mealId].completed = foods.some(f => state.feeding[mealId].items[f.id]?.checked);
   saveData(state);
 }
 
-function adjustQty(mealId, foodId, delta) {
-  if (!state.feeding[mealId]?.items[foodId]) return;
-  state.feeding[mealId].items[foodId].qty = Math.max(0, Math.round((state.feeding[mealId].items[foodId].qty + delta) * 100) / 100);
+function unconfirmMeal(mealId) {
+  if (!state.feeding[mealId]) return;
+  state.feeding[mealId].completed = false;
   saveData(state);
+}
+
+function updateChipsOnly() {
+  updateSummary();
+  renderMealTabs();
+  renderChips();
 }
 
 // ========== ACTIVITY ==========
@@ -1011,10 +1052,10 @@ function renderAnalysis() {
   html += '<div class="analysis-dim"><div class="analysis-dim-title">🍽️ 饮食摄入</div>';
   const dietCats = [
     { name:'奶类', unit:'ml', actual:milk, refMin:ref.milk.min, refMax:ref.milk.max },
-    { name:'谷物', unit:'碗', actual:grain, refMin:ref.grain.min, refMax:ref.grain.max },
-    { name:'蔬菜', unit:'份', actual:veggie, refMin:ref.veggie.min, refMax:ref.veggie.max },
+    { name:'谷物', unit:'克', actual:grain, refMin:ref.grain.min, refMax:ref.grain.max },
+    { name:'蔬菜', unit:'克', actual:veggie, refMin:ref.veggie.min, refMax:ref.veggie.max },
     { name:'水果', unit:'份', actual:fruit, refMin:ref.fruit.min, refMax:ref.fruit.max },
-    { name:'肉禽蛋', unit:'份', actual:meat, refMin:ref.meat.min, refMax:ref.meat.max }
+    { name:'肉禽蛋', unit:'克', actual:meat, refMin:ref.meat.min, refMax:ref.meat.max }
   ];
   for (const c of dietCats) html += renderAnalysisItem(c, 'min');
   html += '</div>';
@@ -1102,7 +1143,7 @@ function renderAlerts() {
   if (fruit===0) alerts.push({level:'danger',title:'未摄入水果',desc:'上午和下午加餐各一份水果'});
   if (veggie===0) alerts.push({level:'danger',title:'未摄入蔬菜',desc:'午晚餐应至少含一份蔬菜'});
   if (meat===0) alerts.push({level:'danger',title:'未摄入肉禽蛋',desc:'蛋白质对发育至关重要'});
-  if (grain>ref.grain.max*1.2) alerts.push({level:'warning',title:'谷物偏多',desc:`今日 ${grain} 碗，参考 ${ref.grain.min}-${ref.grain.max} 碗`});
+  if (grain>ref.grain.max*1.2) alerts.push({level:'warning',title:'谷物偏多',desc:`今日 ${grain}克，参考 ${ref.grain.min}-${ref.grain.max}克`});
   if (!hasDinnerMeat && Object.values(state.feeding.dinner?.items||{}).some(i=>i.checked)) {
     alerts.push({level:'info',title:'晚餐缺蛋白质',desc:'建议搭配肉/鱼/豆制品'});
   }
