@@ -1151,7 +1151,7 @@ function renderRoomPanel() {
     content.innerHTML = `
       <div class="room-hint-text" style="margin-bottom:12px">开启家庭同步，爷爷奶奶一起记录，数据统一分析。</div>
       <div class="sync-server-input">
-        <input class="sync-input" type="text" id="serverUrl" value="https://baby-tracker-5uwj.onrender.com" placeholder="后端服务地址">
+        <input class="sync-input" type="text" id="serverUrl" value="${window.location.origin}" placeholder="后端服务地址">
         <button class="room-btn-sm primary" onclick="showJoinOrCreate()">连接服务器</button>
       </div>
       <div class="room-hint-text" style="margin-top:6px;font-size:10px">提示：当前为<b>本机记录模式</b></div>`;
