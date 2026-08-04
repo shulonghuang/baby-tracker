@@ -1,0 +1,14 @@
+{
+  "name": "宝宝喂养追踪",
+  "short_name": "喂养追踪",
+  "description": "记录宝宝每日喂养、睡眠、运动、饮水和补充剂",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F9F8F6",
+  "theme_color": "#8AAA94",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
