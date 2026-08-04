@@ -444,10 +444,10 @@ function defaultFeeding() {
 function defaultData() {
   return {
     feeding: defaultFeeding(),
-    activity: { outdoor_am:false, outdoor_am_min:30, outdoor_pm:false, outdoor_pm_min:30, walking:false, walking_min:15, games:[] },
-    sleep: { night:0, nap_am:0, nap_pm:0 },
-    water: { records:[] },
-    supplements: { ad:false, dha:false }
+    activity: { confirmed:false, outdoor_am:false, outdoor_am_min:30, outdoor_pm:false, outdoor_pm_min:30, walking:false, walking_min:15, games:[] },
+    sleep: { confirmed:false, night:0, nap_am:0, nap_pm:0 },
+    water: { confirmed:false, records:[] },
+    supplements: { confirmed:false, ad:false, dha:false }
   };
 }
 
@@ -469,6 +469,11 @@ function loadData() {
             data.feeding[m.id].time = m.defaultTime;
           }
         }
+        // Migrate: ensure confirmed flags exist on all sections
+        if (data.activity && data.activity.confirmed === undefined) data.activity.confirmed = false;
+        if (data.sleep && data.sleep.confirmed === undefined) data.sleep.confirmed = false;
+        if (data.water && data.water.confirmed === undefined) data.water.confirmed = false;
+        if (data.supplements && data.supplements.confirmed === undefined) data.supplements.confirmed = false;
         return data;
       }
     }
@@ -508,15 +513,31 @@ function syncToServer() {
   const sections = [
     { name: 'feeding', data: { meals: state.feeding } },
     { name: 'activity', data: {
+        confirmed: state.activity.confirmed === true,
         outdoor_am: state.activity.outdoor_am ? state.activity.outdoor_am_min : 0,
         outdoor_pm: state.activity.outdoor_pm ? state.activity.outdoor_pm_min : 0,
         walking: state.activity.walking ? state.activity.walking_min : 0,
         games: state.activity.games || []
       }
     },
-    { name: 'sleep', data: state.sleep },
-    { name: 'water', data: state.water },
-    { name: 'supplements', data: state.supplements }
+    { name: 'sleep', data: {
+        confirmed: state.sleep.confirmed === true,
+        night: state.sleep.night || 0,
+        nap_am: state.sleep.nap_am || 0,
+        nap_pm: state.sleep.nap_pm || 0
+      }
+    },
+    { name: 'water', data: {
+        confirmed: state.water.confirmed === true,
+        records: state.water.records || []
+      }
+    },
+    { name: 'supplements', data: {
+        confirmed: state.supplements.confirmed === true,
+        ad: state.supplements.ad || false,
+        dha: state.supplements.dha || false
+      }
+    }
   ];
 
   for (const sec of sections) {
@@ -563,6 +584,7 @@ async function loadFromServer() {
     // Activity: convert numbers to bool+min
     if (merged.activity) {
       const a = merged.activity;
+      newState.activity.confirmed = a.confirmed === true;
       if (a.outdoor_am > 0) { newState.activity.outdoor_am = true; newState.activity.outdoor_am_min = a.outdoor_am; }
       if (a.outdoor_pm > 0) { newState.activity.outdoor_pm = true; newState.activity.outdoor_pm_min = a.outdoor_pm; }
       if (a.walking > 0) { newState.activity.walking = true; newState.activity.walking_min = a.walking; }
@@ -571,6 +593,7 @@ async function loadFromServer() {
 
     // Sleep
     if (merged.sleep) {
+      newState.sleep.confirmed = merged.sleep.confirmed === true;
       newState.sleep.night = merged.sleep.night || 0;
       newState.sleep.nap_am = merged.sleep.nap_am || 0;
       newState.sleep.nap_pm = merged.sleep.nap_pm || 0;
@@ -578,11 +601,13 @@ async function loadFromServer() {
 
     // Water
     if (merged.water?.records) {
+      newState.water.confirmed = merged.water.confirmed === true;
       newState.water.records = merged.water.records;
     }
 
     // Supplements
     if (merged.supplements) {
+      newState.supplements.confirmed = merged.supplements.confirmed === true;
       newState.supplements.ad = merged.supplements.ad || false;
       newState.supplements.dha = merged.supplements.dha || false;
     }
@@ -880,97 +905,187 @@ function updateChipsOnly() {
 }
 
 // ========== ACTIVITY ==========
+// ========== ACTIVITY (with confirm) ==========
 function renderActivity() {
   const a = state.activity;
-  document.getElementById('activityBody').innerHTML = `
+  const confirmed = a.confirmed === true;
+  const ref = getAgeRef();
+  const hasAny = a.outdoor_am || a.outdoor_pm || a.walking || a.games.length > 0;
+  const totalOutdoor = (a.outdoor_am?a.outdoor_am_min:0)+(a.outdoor_pm?a.outdoor_pm_min:0);
+
+  let html = `
     <div class="activity-row">
       <span class="act-label">☀️ 上午户外</span>
       <div style="display:flex;align-items:center;gap:6px">
-        <div class="act-check${a.outdoor_am?' checked':''}" onclick="toggleAct('outdoor_am')"></div>
+        <div class="act-check${a.outdoor_am?' checked':''}" onclick="${confirmed?'':'toggleActPending(\"outdoor_am\")'}" style="${confirmed?'pointer-events:none':''}"></div>
         <div class="food-qty">
-          <button class="food-qty-btn" onclick="adjustAct('outdoor_am_min',-15)">−</button><span class="food-qty-val">${a.outdoor_am_min}</span><button class="food-qty-btn" onclick="adjustAct('outdoor_am_min',15)">+</button><span class="qty-unit">分钟</span>
+          <button class="food-qty-btn" onclick="${confirmed?'':'adjustActPending(\"outdoor_am_min\",-15)'}" ${confirmed?'disabled':''}>−</button><span class="food-qty-val">${a.outdoor_am_min}</span><button class="food-qty-btn" onclick="${confirmed?'':'adjustActPending(\"outdoor_am_min\",15)'}" ${confirmed?'disabled':''}>+</button><span class="qty-unit">分钟</span>
         </div>
       </div>
     </div>
     <div class="activity-row">
       <span class="act-label">🌤️ 下午户外</span>
       <div style="display:flex;align-items:center;gap:6px">
-        <div class="act-check${a.outdoor_pm?' checked':''}" onclick="toggleAct('outdoor_pm')"></div>
+        <div class="act-check${a.outdoor_pm?' checked':''}" onclick="${confirmed?'':'toggleActPending(\"outdoor_pm\")'}" style="${confirmed?'pointer-events:none':''}"></div>
         <div class="food-qty">
-          <button class="food-qty-btn" onclick="adjustAct('outdoor_pm_min',-15)">−</button><span class="food-qty-val">${a.outdoor_pm_min}</span><button class="food-qty-btn" onclick="adjustAct('outdoor_pm_min',15)">+</button><span class="qty-unit">分钟</span>
+          <button class="food-qty-btn" onclick="${confirmed?'':'adjustActPending(\"outdoor_pm_min\",-15)'}" ${confirmed?'disabled':''}>−</button><span class="food-qty-val">${a.outdoor_pm_min}</span><button class="food-qty-btn" onclick="${confirmed?'':'adjustActPending(\"outdoor_pm_min\",15)'}" ${confirmed?'disabled':''}>+</button><span class="qty-unit">分钟</span>
         </div>
       </div>
     </div>
     <div class="activity-row">
       <span class="act-label">🚶 行走练习</span>
       <div style="display:flex;align-items:center;gap:6px">
-        <div class="act-check${a.walking?' checked':''}" onclick="toggleAct('walking')"></div>
+        <div class="act-check${a.walking?' checked':''}" onclick="${confirmed?'':'toggleActPending(\"walking\")'}" style="${confirmed?'pointer-events:none':''}"></div>
         <div class="food-qty">
-          <button class="food-qty-btn" onclick="adjustAct('walking_min',-5)">−</button><span class="food-qty-val">${a.walking_min}</span><button class="food-qty-btn" onclick="adjustAct('walking_min',5)">+</button><span class="qty-unit">分钟</span>
+          <button class="food-qty-btn" onclick="${confirmed?'':'adjustActPending(\"walking_min\",-5)'}" ${confirmed?'disabled':''}>−</button><span class="food-qty-val">${a.walking_min}</span><button class="food-qty-btn" onclick="${confirmed?'':'adjustActPending(\"walking_min\",5)'}" ${confirmed?'disabled':''}>+</button><span class="qty-unit">分钟</span>
         </div>
       </div>
     </div>
     <div style="margin-top:12px;font-size:13px;font-weight:600;color:var(--text2)">亲子互动</div>
     <div class="game-grid">
-      ${GAMES.map(g => `<div class="game-card${a.games.includes(g.id)?' selected':''}" onclick="toggleGame('${g.id}')"><span class="game-emoji">${g.emoji}</span>${g.name}</div>`).join('')}
+      ${GAMES.map(g => `<div class="game-card${a.games.includes(g.id)?' selected':''}" onclick="${confirmed?'':'toggleGamePending(\"${g.id}\")'}" style="${confirmed?'pointer-events:none':''}"><span class="game-emoji">${g.emoji}</span>${g.name}</div>`).join('')}
     </div>
-    <div class="bottom-summary">总户外：${(a.outdoor_am?a.outdoor_am_min:0)+(a.outdoor_pm?a.outdoor_pm_min:0)} 分钟 <span class="ref">参考 {ageRef.outdoor.min}-{ageRef.outdoor.max} 分钟</span> | 游戏 ${a.games.length} 项</div>`.replace('{ageRef.outdoor.min}', getAgeRef().outdoor.min).replace('{ageRef.outdoor.max}', getAgeRef().outdoor.max);
+    <div class="bottom-summary">总户外：${totalOutdoor} 分钟 <span class="ref">参考 ${ref.outdoor.min}-${ref.outdoor.max} 分钟</span> | 游戏 ${a.games.length} 项</div>`;
+
+  if (confirmed) {
+    html += `<div class="confirm-row"><span class="confirm-done">✅ 已打卡</span><button class="confirm-edit-btn" onclick="unconfirmActivity()">修改</button></div>`;
+  } else {
+    html += `<div class="confirm-row"><button class="confirm-btn"${!hasAny?' disabled':''} onclick="confirmActivity()">✅ 确认打卡</button></div>`;
+    if (!hasAny) html += '<div class="confirm-hint">请先勾选户外活动、行走练习或亲子游戏，然后确认打卡</div>';
+  }
+
+  document.getElementById('activityBody').innerHTML = html;
 }
-function toggleAct(prop) { state.activity[prop] = !state.activity[prop]; saveData(state); }
-function adjustAct(prop, d) { state.activity[prop] = Math.max(0, state.activity[prop]+d); saveData(state); }
-function toggleGame(id) {
+function toggleActPending(prop) { state.activity[prop] = !state.activity[prop]; renderActivity(); updateChipsOnly(); }
+function adjustActPending(prop, d) { state.activity[prop] = Math.max(0, state.activity[prop]+d); renderActivity(); updateChipsOnly(); }
+function toggleGamePending(id) {
   const i = state.activity.games.indexOf(id);
   if (i>=0) state.activity.games.splice(i,1); else state.activity.games.push(id);
-  saveData(state);
+  renderActivity(); updateChipsOnly();
 }
+function confirmActivity() { state.activity.confirmed = true; saveData(state); }
+function unconfirmActivity() { state.activity.confirmed = false; saveData(state); }
 
-// ========== SLEEP ==========
+// ========== SLEEP (with confirm) ==========
 function renderSleep() {
   const s = state.sleep;
+  const confirmed = s.confirmed === true;
   const ref = getAgeRef();
-  document.getElementById('sleepBody').innerHTML = `
-    <div class="sleep-row"><span>🌙 夜间睡眠</span><div class="food-qty"><button class="food-qty-btn" onclick="adjustSleep('night',-0.5)">−</button><span class="food-qty-val">${s.night}</span><button class="food-qty-btn" onclick="adjustSleep('night',0.5)">+</button><span class="qty-unit">小时</span></div></div>
-    <div class="sleep-row"><span>☀️ 上午小睡</span><div class="food-qty"><button class="food-qty-btn" onclick="adjustSleep('nap_am',-0.5)">−</button><span class="food-qty-val">${s.nap_am}</span><button class="food-qty-btn" onclick="adjustSleep('nap_am',0.5)">+</button><span class="qty-unit">小时</span></div></div>
-    <div class="sleep-row"><span>🌤️ 下午小睡</span><div class="food-qty"><button class="food-qty-btn" onclick="adjustSleep('nap_pm',-0.5)">−</button><span class="food-qty-val">${s.nap_pm}</span><button class="food-qty-btn" onclick="adjustSleep('nap_pm',0.5)">+</button><span class="qty-unit">小时</span></div></div>
-    <div class="bottom-summary">总睡眠：${s.night+s.nap_am+s.nap_pm} h <span class="ref">参考 ${ref.sleep.total} h</span></div>`;
-}
-function adjustSleep(p, d) { state.sleep[p] = Math.max(0, Math.round((state.sleep[p]+d)*10)/10); saveData(state); }
+  const total = s.night + s.nap_am + s.nap_pm;
+  const hasAny = total > 0;
 
-// ========== WATER ==========
+  let html = `
+    <div class="sleep-row"><span>🌙 夜间睡眠</span><div class="food-qty"><button class="food-qty-btn" onclick="${confirmed?'':'adjustSleepPending(\"night\",-0.5)'}" ${confirmed?'disabled':''}>−</button><span class="food-qty-val">${s.night}</span><button class="food-qty-btn" onclick="${confirmed?'':'adjustSleepPending(\"night\",0.5)'}" ${confirmed?'disabled':''}>+</button><span class="qty-unit">小时</span></div></div>
+    <div class="sleep-row"><span>☀️ 上午小睡</span><div class="food-qty"><button class="food-qty-btn" onclick="${confirmed?'':'adjustSleepPending(\"nap_am\",-0.5)'}" ${confirmed?'disabled':''}>−</button><span class="food-qty-val">${s.nap_am}</span><button class="food-qty-btn" onclick="${confirmed?'':'adjustSleepPending(\"nap_am\",0.5)'}" ${confirmed?'disabled':''}>+</button><span class="qty-unit">小时</span></div></div>
+    <div class="sleep-row"><span>🌤️ 下午小睡</span><div class="food-qty"><button class="food-qty-btn" onclick="${confirmed?'':'adjustSleepPending(\"nap_pm\",-0.5)'}" ${confirmed?'disabled':''}>−</button><span class="food-qty-val">${s.nap_pm}</span><button class="food-qty-btn" onclick="${confirmed?'':'adjustSleepPending(\"nap_pm\",0.5)'}" ${confirmed?'disabled':''}>+</button><span class="qty-unit">小时</span></div></div>`;
+
+  const hint = total > 0
+    ? (total >= ref.sleep.total * 0.9 ? '✅ 睡眠充足' : total >= ref.sleep.total * 0.7 ? '⚠️ 睡眠偏少' : '❌ 睡眠不足')
+    : '';
+  html += `<div class="bottom-summary">总睡眠：${total} h <span class="ref">参考 ${ref.sleep.total} h</span>${hint ? ' · ' + hint : ''}</div>`;
+
+  if (confirmed) {
+    html += `<div class="confirm-row"><span class="confirm-done">✅ 已打卡</span><button class="confirm-edit-btn" onclick="unconfirmSleep()">修改</button></div>`;
+  } else {
+    html += `<div class="confirm-row"><button class="confirm-btn"${!hasAny?' disabled':''} onclick="confirmSleep()">✅ 确认打卡</button></div>`;
+    if (!hasAny) html += '<div class="confirm-hint">请先调整睡眠时长，然后确认打卡</div>';
+  }
+
+  document.getElementById('sleepBody').innerHTML = html;
+}
+function adjustSleepPending(p, d) { state.sleep[p] = Math.max(0, Math.round((state.sleep[p]+d)*10)/10); renderSleep(); updateChipsOnly(); }
+function confirmSleep() { state.sleep.confirmed = true; saveData(state); }
+function unconfirmSleep() { state.sleep.confirmed = false; saveData(state); }
+
+// ========== WATER (with confirm) ==========
 function renderWater() {
   const w = state.water;
-  const total = (w.records||[]).reduce((s,r)=>s+(r.amount||0),0);
+  const confirmed = w.confirmed === true;
+  const records = w.records || [];
+  const total = records.reduce((s,r)=>s+(r.amount||0),0);
   const ref = getAgeRef().water;
-  document.getElementById('waterBody').innerHTML = `
-    <div class="water-slots">
-      ${WATER_SLOTS.map(s=>{const r=(w.records||[]).find(x=>x.slot===s.id);return `<div class="water-slot${r?' recorded':''}" onclick="toggleWater('${s.id}')">${s.emoji} ${s.label}${r?`<span class="slot-amount">${r.amount}ml</span>`:''}</div>`;}).join('')}
-    </div>
-    ${(w.records||[]).map(r=>`<div class="activity-row"><span>${(WATER_SLOTS.find(s=>s.id===r.slot)||{}).emoji||'💧'} ${(WATER_SLOTS.find(s=>s.id===r.slot)||{}).label||''}</span><div class="food-qty"><button class="food-qty-btn" onclick="adjustWater('${r.slot}',-20)">−</button><span class="food-qty-val">${r.amount}</span><button class="food-qty-btn" onclick="adjustWater('${r.slot}',20)">+</button><span class="qty-unit">ml</span></div><button style="background:none;border:none;color:var(--rose);font-size:12px;cursor:pointer" onclick="removeWater('${r.slot}')">清除</button></div>`).join('') || '<div style="padding:20px;text-align:center;color:var(--text2);font-size:13px">点击上方时间段记录饮水量</div>'}
-    <div class="bottom-summary">总饮水：${total} ml <span class="ref">参考 ${ref.min}-${ref.max} ml</span></div>`;
+  const hasAny = records.length > 0;
+
+  let html = '<div class="water-slots">';
+  for (let i = 0; i < WATER_SLOTS.length; i++) {
+    const s = WATER_SLOTS[i];
+    const r = records.find(x=>x.slot===s.id);
+    const onclick = confirmed ? '' : 'toggleWaterPending(\"' + s.id + '\")';
+    const style = confirmed ? 'pointer-events:none' : '';
+    html += '<div class="water-slot' + (r?' recorded':'') + '" onclick="' + onclick + '" style="' + style + '">' + s.emoji + ' ' + s.label + (r?'<span class="slot-amount">' + r.amount + 'ml</span>':'') + '</div>';
+  }
+  html += '</div>';
+
+  if (records.length > 0) {
+    for (let i = 0; i < records.length; i++) {
+      const r = records[i];
+      const s = WATER_SLOTS.find(s=>s.id===r.slot) || {};
+      const emoji = s.emoji || '💧';
+      const label = s.label || '';
+      const adjMinus = confirmed ? '' : 'adjustWaterPending(\"' + r.slot + '\",-20)';
+      const adjPlus = confirmed ? '' : 'adjustWaterPending(\"' + r.slot + '\",20)';
+      const disabled = confirmed ? ' disabled' : '';
+      const clearBtn = confirmed ? '' : '<button style="background:none;border:none;color:var(--rose);font-size:12px;cursor:pointer" onclick="removeWaterPending(\'' + r.slot + '\')">清除</button>';
+      html += '<div class="activity-row"><span>' + emoji + ' ' + label + '</span><div class="food-qty"><button class="food-qty-btn" onclick="' + adjMinus + '"' + disabled + '>−</button><span class="food-qty-val">' + r.amount + '</span><button class="food-qty-btn" onclick="' + adjPlus + '"' + disabled + '>+</button><span class="qty-unit">ml</span></div>' + clearBtn + '</div>';
+    }
+  } else {
+    html += '<div style="padding:20px;text-align:center;color:var(--text2);font-size:13px">点击上方时间段记录饮水量</div>';
+  }
+
+  const hint = total >= ref.min ? '✅ 饮水达标' : total >= ref.min * 0.5 ? '⚠️ 饮水偏少' : total > 0 ? '❌ 饮水不足' : '';
+  html += `<div class="bottom-summary">总饮水：${total} ml <span class="ref">参考 ${ref.min}-${ref.max} ml</span>${hint ? ' · ' + hint : ''}</div>`;
+
+  if (confirmed) {
+    html += `<div class="confirm-row"><span class="confirm-done">✅ 已打卡</span><button class="confirm-edit-btn" onclick="unconfirmWater()">修改</button></div>`;
+  } else {
+    html += `<div class="confirm-row"><button class="confirm-btn"${!hasAny?' disabled':''} onclick="confirmWater()">✅ 确认打卡</button></div>`;
+    if (!hasAny) html += '<div class="confirm-hint">请先点击时间段记录饮水量，然后确认打卡</div>';
+  }
+
+  document.getElementById('waterBody').innerHTML = html;
 }
-function toggleWater(slot) {
+function toggleWaterPending(slot) {
   const records = state.water.records||[];
   const i = records.findIndex(r=>r.slot===slot);
   if (i>=0) records.splice(i,1); else records.push({slot,amount:50});
-  state.water.records = records; saveData(state);
+  state.water.records = records;
+  renderWater(); updateChipsOnly();
 }
-function adjustWater(slot,d) {
+function adjustWaterPending(slot,d) {
   const r = state.water.records.find(x=>x.slot===slot);
-  if (r) { r.amount = Math.max(0, r.amount+d); saveData(state); }
+  if (r) { r.amount = Math.max(0, r.amount+d); }
+  renderWater(); updateChipsOnly();
 }
-function removeWater(slot) {
+function removeWaterPending(slot) {
   state.water.records = state.water.records.filter(r=>r.slot!==slot);
-  saveData(state);
+  renderWater(); updateChipsOnly();
 }
+function confirmWater() { state.water.confirmed = true; saveData(state); }
+function unconfirmWater() { state.water.confirmed = false; saveData(state); }
 
-// ========== SUPPLEMENTS ==========
+// ========== SUPPLEMENTS (with confirm) ==========
 function renderSupps() {
-  document.getElementById('suppsBody').innerHTML = `
-    <div class="activity-row"><span>💊 维生素AD（A 1500-2000U + D 400-800U）</span><div class="act-check${state.supplements.ad?' checked':''}" onclick="toggleSupp('ad')"></div></div>
-    <div class="activity-row"><span>🐟 DHA（建议补充）</span><div class="act-check${state.supplements.dha?' checked':''}" onclick="toggleSupp('dha')"></div></div>
+  const sup = state.supplements;
+  const confirmed = sup.confirmed === true;
+  const hasAny = sup.ad || sup.dha;
+
+  let html = `
+    <div class="activity-row"><span>💊 维生素AD（A 1500-2000U + D 400-800U）</span><div class="act-check${sup.ad?' checked':''}" onclick="${confirmed?'':'toggleSuppPending(\"ad\")'}" style="${confirmed?'pointer-events:none':''}"></div></div>
+    <div class="activity-row"><span>🐟 DHA（建议补充）</span><div class="act-check${sup.dha?' checked':''}" onclick="${confirmed?'':'toggleSuppPending(\"dha\")'}" style="${confirmed?'pointer-events:none':''}"></div></div>
     <div class="science-card"><div class="science-title">📚 科学依据</div><div class="science-text">《中国儿童维生素A、维生素D临床应用专家共识（2024）》：<b>每日持续补充AD，不建议与D3交替</b>。交替会降低依从性。维生素A让D的生物活性提升 <b>130%</b>。建议补充至 <b>青春期</b>。</div></div>`;
+
+  if (confirmed) {
+    html += `<div class="confirm-row"><span class="confirm-done">✅ 已打卡</span><button class="confirm-edit-btn" onclick="unconfirmSupps()">修改</button></div>`;
+  } else {
+    html += `<div class="confirm-row"><button class="confirm-btn"${!hasAny?' disabled':''} onclick="confirmSupps()">✅ 确认打卡</button></div>`;
+    if (!hasAny) html += '<div class="confirm-hint">请先勾选已服用的补充剂，然后确认打卡</div>';
+  }
+
+  document.getElementById('suppsBody').innerHTML = html;
 }
-function toggleSupp(p) { state.supplements[p] = !state.supplements[p]; saveData(state); }
+function toggleSuppPending(p) { state.supplements[p] = !state.supplements[p]; renderSupps(); updateChipsOnly(); }
+function confirmSupps() { state.supplements.confirmed = true; saveData(state); }
+function unconfirmSupps() { state.supplements.confirmed = false; saveData(state); }
 
 // ========== SUMMARY & CHIPS ==========
 function updateSummary() {
@@ -1005,16 +1120,33 @@ function renderChips() {
     else if (cond.partial) { cls='partial'; txt=cond.txt2||'部分'; }
     el.className='section-chip '+cls; el.textContent=txt;
   }
-  let meals=0;
-  for (const m of MEALS) if (state.feeding[m.id] && Object.values(state.feeding[m.id].items||{}).some(i=>i.checked)) meals++;
-  chip('Feeding',{done:meals>=5,partial:meals>=2,txt:'已完成',txt2:'部分'});
-  const to = (state.activity.outdoor_am?state.activity.outdoor_am_min:0)+(state.activity.outdoor_pm?state.activity.outdoor_pm_min:0);
-  chip('Activity',{done:to>=getAgeRef().outdoor.min,partial:to>0,txt:'达标',txt2:'部分'});
-  const ts = state.sleep.night+state.sleep.nap_am+state.sleep.nap_pm;
-  chip('Sleep',{done:ts>=10,partial:ts>0,txt:'达标',txt2:'部分'});
-  const tw = (state.water.records||[]).reduce((s,r)=>s+(r.amount||0),0);
-  chip('Water',{done:tw>=getAgeRef().water.min,partial:tw>0,txt:'达标',txt2:'部分'});
-  chip('Supps',{done:state.supplements.ad,txt:'已补充',txt2:'已补充'});
+  // Feeding: count confirmed meals
+  let mealsConfirmed=0, mealsPartial=0;
+  for (const m of MEALS) {
+    if (state.feeding[m.id]?.completed) mealsConfirmed++;
+    else if (state.feeding[m.id] && Object.values(state.feeding[m.id].items||{}).some(i=>i.checked)) mealsPartial++;
+  }
+  chip('Feeding',{done:mealsConfirmed>=5,partial:mealsConfirmed>=2||mealsPartial>=1,txt:'已完成',txt2:'部分'});
+
+  // Activity: confirmed status
+  const aConfirmed = state.activity.confirmed === true;
+  const hasAct = state.activity.outdoor_am || state.activity.outdoor_pm || state.activity.walking || state.activity.games.length > 0;
+  chip('Activity',{done:aConfirmed,partial:hasAct,txt:'已打卡',txt2:'编辑中'});
+
+  // Sleep: confirmed status
+  const sConfirmed = state.sleep.confirmed === true;
+  const hasSleep = (state.sleep.night + state.sleep.nap_am + state.sleep.nap_pm) > 0;
+  chip('Sleep',{done:sConfirmed,partial:hasSleep,txt:'已打卡',txt2:'编辑中'});
+
+  // Water: confirmed status
+  const wConfirmed = state.water.confirmed === true;
+  const hasWater = (state.water.records||[]).length > 0;
+  chip('Water',{done:wConfirmed,partial:hasWater,txt:'已打卡',txt2:'编辑中'});
+
+  // Supps: confirmed status
+  const supConfirmed = state.supplements.confirmed === true;
+  const hasSupps = state.supplements.ad || state.supplements.dha;
+  chip('Supps',{done:supConfirmed,partial:hasSupps,txt:'已打卡',txt2:'编辑中'});
 }
 
 // ========== COMPREHENSIVE ANALYSIS ==========
