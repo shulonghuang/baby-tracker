@@ -14,17 +14,17 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#F9F8F6;--card:#FFFFFF;--text:#3C3A37;--text2:#7A7672;--text3:#A49F99;
-  --green:#8AAA94;--green-l:#EAF2EC;--amber:#D4A96A;--amber-l:#FDF6EB;
-  --rose:#C4877A;--rose-l:#F9EDEA;--blue:#8AADB8;--blue-l:#EDF4F6;
-  --border:#E8E5DF;--radius:14px;--radius-sm:10px;
+  --bg:#F9F8F6;--card:#FFFFFF;--text:#2D2B28;--text2:#8C8884;--text3:#B5B0AA;
+  --green:#6B9B7E;--green-l:#E8F2EB;--amber:#C4A05A;--amber-l:#FCF6EC;
+  --rose:#C4877A;--rose-l:#F9EDEA;--blue:#7A9EAA;--blue-l:#EDF3F5;
+  --border:#EBE7E1;--radius:12px;--radius-sm:8px;
   --font:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
 }
 body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;max-width:480px;margin:0 auto;position:relative;-webkit-tap-highlight-color:transparent}
 .app-screen{padding-bottom:24px}
-.app-header{padding:14px 16px 10px;display:flex;align-items:center;justify-content:space-between;gap:8px}
-.app-title{font-size:18px;font-weight:700;display:flex;align-items:center;gap:6px}
-.app-title .age-tag{font-size:11px;font-weight:500;background:var(--green-l);color:var(--green);padding:2px 8px;border-radius:10px}
+.app-header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.app-title{font-size:17px;font-weight:700;display:flex;align-items:center;gap:4px;letter-spacing:-0.3px}
+.app-title .age-tag{font-size:10px;font-weight:500;background:var(--green-l);color:var(--green);padding:1px 7px;border-radius:8px;margin-left:2px}
 .app-right{display:flex;align-items:center;gap:6px}
 .icon-btn{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--border);background:transparent;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:.2s}
 .icon-btn:active{background:var(--border)}
@@ -34,33 +34,29 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .app-badge.online{background:var(--green-l);color:var(--green)}
 
 /* Weather Banner */
-.weather-banner{margin:0 16px 12px;background:linear-gradient(135deg,#E8F0FE,#F0F7F4);border-radius:var(--radius);padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,0.03)}
-.weather-row{display:flex;align-items:center;gap:10px;margin-bottom:6px}
-.weather-date{font-size:16px;font-weight:700;color:var(--text)}
-.weather-date .wkday{font-size:12px;font-weight:400;color:var(--text2);margin-left:6px}
-.weather-desc{font-size:28px}
-.weather-temp{font-size:14px;font-weight:600;color:var(--text)}
-.weather-detail{display:flex;gap:16px;font-size:11px;color:var(--text2);flex-wrap:wrap}
-.weather-detail .uv-tag{padding:2px 8px;border-radius:10px;font-weight:600;font-size:11px}
+.weather-banner{margin:0 16px 10px;background:var(--card);border-radius:var(--radius);padding:9px 14px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text2);flex-wrap:wrap;line-height:1.5}
+.wx-date{font-weight:600;color:var(--text);white-space:nowrap}
+.wx-icon{font-size:16px;line-height:1}
+.wx-temp{font-weight:600;color:var(--text);white-space:nowrap}
+.wx-uv{padding:1px 7px;border-radius:8px;font-size:11px;font-weight:600;white-space:nowrap}
 .uv-low{background:#E8F5E9;color:#2E7D32}
 .uv-moderate{background:#FFF8E1;color:#F9A825}
 .uv-high{background:#FFF3E0;color:#E65100}
 .uv-very-high{background:#FCE4EC;color:#C62828}
 .uv-extreme{background:#EDE7F6;color:#4A148C}
-.uv-loading{background:var(--border);color:var(--text2)}
+.wx-advice{color:var(--text2);white-space:nowrap}
+.wx-hint{color:var(--green);cursor:pointer}
 
 /* Growth Banner */
-.growth-banner{margin:0 16px 12px;background:var(--card);border-radius:var(--radius);padding:12px 16px;box-shadow:0 1px 4px rgba(0,0,0,0.03);display:flex;gap:14px;align-items:center;flex-wrap:wrap}
-.growth-item{display:flex;flex-direction:column;align-items:center;min-width:56px}
-.growth-item .g-icon{font-size:16px;margin-bottom:2px}
-.growth-item .g-val{font-size:15px;font-weight:700;color:var(--text)}
-.growth-item .g-unit{font-size:10px;color:var(--text2)}
-.growth-item .g-status{font-size:9px;padding:1px 6px;border-radius:8px;margin-top:2px;font-weight:600}
-.g-status.ok{background:var(--green-l);color:var(--green)}
-.g-status.warn{background:var(--amber-l);color:var(--amber)}
-.g-status.bad{background:var(--rose-l);color:var(--rose)}
-.growth-date{font-size:10px;color:var(--text3);text-align:center;width:100%;margin-top:4px}
-.growth-empty{font-size:12px;color:var(--text2);text-align:center;padding:8px 0;width:100%}
+.growth-banner{margin:0 16px 10px;background:var(--card);border-radius:var(--radius);padding:10px 14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:13px}
+.g-item{display:flex;align-items:center;gap:5px;white-space:nowrap}
+.g-label{color:var(--text2);font-size:11px}
+.g-val{font-weight:700;color:var(--text)}
+.g-unit{font-size:10px;color:var(--text3)}
+.g-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.g-dot.ok{background:var(--green)}.g-dot.warn{background:var(--amber)}.g-dot.bad{background:var(--rose)}
+.g-date{font-size:10px;color:var(--text3);width:100%;margin-top:2px}
+.growth-empty{font-size:12px;color:var(--text2);text-align:center;padding:4px 0;width:100%}
 
 /* Room Panel */
 .room-panel{display:none;background:var(--card);margin:0 16px 12px;border-radius:var(--radius);padding:16px;box-shadow:0 1px 6px rgba(0,0,0,0.03)}
@@ -96,25 +92,25 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .settings-hint{font-size:11px;color:var(--text2);text-align:center;margin-top:8px}
 
 /* Summary */
-.summary-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:0 16px 12px}
-.summary-card{background:var(--card);border-radius:var(--radius-sm);padding:14px 12px;text-align:center;box-shadow:0 1px 6px rgba(0,0,0,0.03);transition:.2s}
-.summary-val{font-size:22px;font-weight:700;margin-bottom:2px}
+.summary-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:0 16px 10px}
+.summary-card{background:var(--card);border-radius:var(--radius-sm);padding:10px 8px;text-align:center}
+.summary-val{font-size:18px;font-weight:700;margin-bottom:1px}
 .summary-val.done{color:var(--green)}.summary-val.near{color:var(--amber)}.summary-val.low{color:var(--rose)}
-.summary-label{font-size:11px;color:var(--text2)}
+.summary-label{font-size:10px;color:var(--text2)}
 
 /* Tabs */
-.tab-bar{display:flex;padding:0 16px 12px;gap:6px}
-.tab-btn{flex:1;padding:10px;text-align:center;font-size:13px;font-weight:600;border-radius:var(--radius-sm);cursor:pointer;transition:.2s;border:none;background:transparent;color:var(--text2);position:relative;font-family:var(--font)}
-.tab-btn.active{background:var(--card);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,0.06)}
-.tab-dot{position:absolute;top:4px;right:8px;width:7px;height:7px;border-radius:50%;background:var(--rose)}
+.tab-bar{display:flex;padding:0 16px 10px;gap:6px}
+.tab-btn{flex:1;padding:8px;text-align:center;font-size:13px;font-weight:600;border-radius:var(--radius-sm);cursor:pointer;transition:.2s;border:none;background:transparent;color:var(--text2);position:relative;font-family:var(--font)}
+.tab-btn.active{background:var(--card);color:var(--text)}
+.tab-dot{position:absolute;top:2px;right:8px;width:6px;height:6px;border-radius:50%;background:var(--rose)}
 .tab-content{display:none;padding:0 16px}
 .tab-content.active{display:block}
 
 /* Section */
-.section{background:var(--card);border-radius:var(--radius);padding:20px;margin-bottom:12px;box-shadow:0 1px 6px rgba(0,0,0,0.03)}
-.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;cursor:pointer;user-select:none}
-.section-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
-.section-chip{font-size:11px;padding:3px 8px;border-radius:10px;font-weight:600}
+.section{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:10px}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;cursor:pointer;user-select:none}
+.section-title{font-size:14px;font-weight:700;display:flex;align-items:center;gap:6px}
+.section-chip{font-size:10px;padding:2px 7px;border-radius:8px;font-weight:600}
 .section-chip.done{background:var(--green-l);color:var(--green)}.section-chip.partial{background:var(--amber-l);color:var(--amber)}.section-chip.none{background:var(--rose-l);color:var(--rose)}
 .section-toggle{font-size:12px;color:var(--text2);transition:.2s}
 .section.open .section-toggle{transform:rotate(180deg)}
@@ -122,80 +118,79 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .section.open .section-body{display:block}
 
 /* Meal tabs */
-.meal-tabs{display:flex;gap:4px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px;-webkit-overflow-scrolling:touch}
-.meal-tab{flex-shrink:0;padding:8px 14px;border-radius:20px;font-size:13px;border:1.5px solid var(--border);cursor:pointer;transition:.2s;white-space:nowrap;background:transparent;font-family:var(--font);color:var(--text2)}
+.meal-tabs{display:flex;gap:4px;overflow-x:auto;padding-bottom:4px;margin-bottom:8px;-webkit-overflow-scrolling:touch}
+.meal-tab{flex-shrink:0;padding:6px 12px;border-radius:16px;font-size:12px;border:1.5px solid var(--border);cursor:pointer;transition:.2s;white-space:nowrap;background:transparent;font-family:var(--font);color:var(--text2)}
 .meal-tab.active{background:var(--green-l);border-color:var(--green);color:var(--green);font-weight:600}
 
 /* Time input */
-.time-row{display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:8px 12px;background:var(--bg);border-radius:var(--radius-sm)}
-.time-label{font-size:12px;color:var(--text2);white-space:nowrap}
-.time-input{padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--font);width:90px;text-align:center;background:#fff}
-.time-suggestion{font-size:11px;color:var(--green);cursor:pointer;margin-left:4px}
+.time-row{display:flex;align-items:center;gap:6px;margin-bottom:10px;padding:6px 10px;background:var(--bg);border-radius:var(--radius-sm)}
+.time-label{font-size:11px;color:var(--text2);white-space:nowrap}
+.time-input{padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;font-family:var(--font);width:80px;text-align:center;background:#fff}
+.time-suggestion{font-size:10px;color:var(--green);cursor:pointer;margin-left:3px}
 .time-suggestion:hover{text-decoration:underline}
 
 /* Food */
-.food-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bg)}
+.food-item{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bg)}
 .food-item:last-child{border-bottom:none}
-.food-left{display:flex;align-items:center;gap:10px;flex:1;cursor:pointer;min-width:0}
-.food-check{width:20px;height:20px;border-radius:6px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;transition:.2s;flex-shrink:0}
+.food-left{display:flex;align-items:center;gap:8px;flex:1;cursor:pointer;min-width:0}
+.food-check{width:18px;height:18px;border-radius:5px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;transition:.2s;flex-shrink:0}
 .food-check.checked{background:var(--green);border-color:var(--green)}
-.food-check.checked::after{content:'\2713';color:#fff;font-size:12px;font-weight:700}
-.food-name{font-size:14px}
-.food-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
-.food-qty{display:flex;align-items:center;gap:6px;min-width:60px;justify-content:flex-end}
-.food-qty-btn{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border);background:transparent;font-size:16px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;color:var(--text)}
+.food-check.checked::after{content:'\2713';color:#fff;font-size:10px;font-weight:700}
+.food-name{font-size:13px}
+.food-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.food-qty{display:flex;align-items:center;gap:4px;min-width:50px;justify-content:flex-end}
+.food-qty-btn{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--border);background:transparent;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;color:var(--text)}
 .food-qty-btn:active{background:var(--border)}
-.food-qty-val{font-size:14px;font-weight:600;min-width:28px;text-align:center}
-.food-ref{font-size:11px;color:var(--text2);min-width:70px;text-align:right}
-.qty-unit{font-size:11px;color:var(--text2);margin-left:2px}
+.food-qty-val{font-size:13px;font-weight:600;min-width:24px;text-align:center}
+.food-ref{font-size:10px;color:var(--text2);min-width:60px;text-align:right}
+.qty-unit{font-size:10px;color:var(--text2);margin-left:1px}
 
 /* Bottom summary */
-.bottom-summary{padding:10px 0;font-size:13px;color:var(--text2);display:flex;align-items:center;gap:8px;border-top:1px solid var(--bg);margin-top:6px}
+.bottom-summary{padding:8px 0;font-size:12px;color:var(--text2);display:flex;align-items:center;gap:6px;border-top:1px solid var(--bg);margin-top:4px}
 .bottom-summary .ref{color:var(--blue)}
 
 /* Confirm button */
-.confirm-row{display:flex;align-items:center;justify-content:center;margin-top:14px;padding-top:12px;border-top:1px solid var(--bg)}
-.confirm-btn{padding:12px 40px;border-radius:24px;font-size:15px;font-weight:700;cursor:pointer;border:none;background:var(--green);color:#fff;font-family:var(--font);transition:.2s;box-shadow:0 2px 8px rgba(138,170,148,0.3)}
+.confirm-row{display:flex;align-items:center;justify-content:center;margin-top:12px;padding-top:10px;border-top:1px solid var(--bg)}
+.confirm-btn{padding:10px 36px;border-radius:20px;font-size:14px;font-weight:700;cursor:pointer;border:none;background:var(--green);color:#fff;font-family:var(--font);transition:.2s}
 .confirm-btn:active{transform:scale(0.97);opacity:0.9}
-.confirm-btn:disabled{background:var(--border);color:var(--text2);box-shadow:none;cursor:not-allowed;transform:none;opacity:1}
-.confirm-hint{font-size:11px;color:var(--text2);text-align:center;margin-top:6px}
-.confirm-done{font-size:13px;color:var(--green);font-weight:600}
-.confirm-edit-btn{padding:5px 14px;border-radius:14px;font-size:12px;border:1.5px solid var(--green);cursor:pointer;background:transparent;color:var(--green);transition:.2s;font-family:var(--font);margin-left:12px}
+.confirm-btn:disabled{background:var(--border);color:var(--text2);cursor:not-allowed;transform:none;opacity:1}
+.confirm-hint{font-size:10px;color:var(--text2);text-align:center;margin-top:5px}
+.confirm-done{font-size:12px;color:var(--green);font-weight:600}
+.confirm-edit-btn{padding:4px 12px;border-radius:12px;font-size:11px;border:1.5px solid var(--green);cursor:pointer;background:transparent;color:var(--green);transition:.2s;font-family:var(--font);margin-left:10px}
 .confirm-edit-btn:active{background:var(--green-l)}
 
 /* Activity */
-.activity-row,.sleep-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bg)}
+.activity-row,.sleep-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bg)}
 .activity-row:last-child,.sleep-row:last-child{border-bottom:none}
-.act-check{width:20px;height:20px;border-radius:6px;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.2s}
+.act-check{width:18px;height:18px;border-radius:5px;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.2s}
 .act-check.checked{background:var(--green);border-color:var(--green)}
-.act-check.checked::after{content:'\2713';color:#fff;font-size:12px;font-weight:700}
-.act-label{font-size:14px;display:flex;align-items:center;gap:6px}
+.act-check.checked::after{content:'\2713';color:#fff;font-size:10px;font-weight:700}
+.act-label{font-size:13px;display:flex;align-items:center;gap:5px}
 
 /* Games */
-.game-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
-.game-card{padding:12px 6px;border-radius:var(--radius-sm);border:1.5px solid var(--border);text-align:center;cursor:pointer;transition:.2s;font-size:12px;line-height:1.4}
+.game-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px}
+.game-card{padding:10px 4px;border-radius:var(--radius-sm);border:1.5px solid var(--border);text-align:center;cursor:pointer;transition:.2s;font-size:11px;line-height:1.3}
 .game-card:hover,.game-card.selected{border-color:var(--green);background:var(--green-l)}
 .game-card.selected{font-weight:600;color:var(--green)}
-.game-emoji{font-size:22px;display:block;margin-bottom:4px}
+.game-emoji{font-size:18px;display:block;margin-bottom:2px}
 
 /* Water */
-.water-slots{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
-.water-slot{padding:8px 12px;border-radius:20px;font-size:12px;border:1.5px solid var(--border);cursor:pointer;transition:.2s;display:flex;align-items:center;gap:4px}
+.water-slots{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
+.water-slot{padding:6px 10px;border-radius:16px;font-size:11px;border:1.5px solid var(--border);cursor:pointer;transition:.2s;display:flex;align-items:center;gap:3px}
 .water-slot.recorded{background:var(--green-l);border-color:var(--green)}
-.water-slot .slot-amount{font-weight:600;margin-left:4px}
+.water-slot .slot-amount{font-weight:600;margin-left:2px}
 
 /* Measurement Section */
-.measure-input-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--bg)}
+.measure-input-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bg)}
 .measure-input-row:last-child{border-bottom:none}
-.measure-label{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600}
-.measure-icon{font-size:20px}
-.measure-field{display:flex;align-items:center;gap:4px}
-.measure-field input{width:60px;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;text-align:center;font-family:var(--font);background:var(--bg)}
+.measure-label{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600}
+.measure-field{display:flex;align-items:center;gap:3px}
+.measure-field input{width:58px;padding:7px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center;font-family:var(--font);background:var(--bg)}
 .measure-field input:focus{border-color:var(--green);outline:none}
-.measure-field .m-unit{font-size:12px;color:var(--text2);min-width:24px}
-.measure-date-input{width:130px;padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-family:var(--font);background:var(--bg);margin-left:8px}
-.measure-history{font-size:11px;color:var(--text2);margin-top:8px;padding:8px;background:var(--bg);border-radius:var(--radius-sm)}
-.measure-history-row{display:flex;justify-content:space-between;padding:3px 0}
+.measure-field .m-unit{font-size:11px;color:var(--text2);min-width:20px}
+.measure-date-input{width:125px;padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:11px;font-family:var(--font);background:var(--bg);margin-left:6px}
+.measure-history{font-size:10px;color:var(--text2);margin-top:6px;padding:6px 8px;background:var(--bg);border-radius:var(--radius-sm)}
+.measure-history-row{display:flex;justify-content:space-between;padding:2px 0}
 
 /* Growth Analysis in Analysis Tab */
 .growth-advice{padding:12px;border-radius:var(--radius-sm);margin-top:8px;font-size:12px;line-height:1.6}
@@ -248,18 +243,18 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
   <!-- Header -->
   <div class="app-header">
-    <div class="app-title" id="headerTitle">🍼 <span id="babyNameDisplay">安安</span>喂养<span class="age-tag" id="ageTag" style="display:none"></span></div>
+    <div class="app-title" id="headerTitle"><span id="babyNameDisplay">安安</span>喂养<span class="age-tag" id="ageTag" style="display:none"></span></div>
     <div class="app-right">
       <span class="sync-text" id="syncStatus"><span class="sync-dot local"></span> 本机</span>
-      <button class="icon-btn" id="settingsBtn" onclick="openSettings()" title="设置">⚙️</button>
-      <button class="app-badge offline" id="roomBtn" onclick="toggleRoom()">👨‍👩‍👧 同步</button>
+      <button class="icon-btn" id="settingsBtn" onclick="openSettings()" title="设置">&#x2699;</button>
+      <button class="app-badge offline" id="roomBtn" onclick="toggleRoom()">同步</button>
     </div>
   </div>
 
   <!-- Settings Overlay -->
   <div class="settings-overlay" id="settingsOverlay">
     <div class="settings-panel">
-      <div class="settings-title">⚙️ 设置 <button class="settings-close" onclick="closeSettings()">✕</button></div>
+      <div class="settings-title">设置 <button class="settings-close" onclick="closeSettings()">✕</button></div>
       <div class="settings-field">
         <div class="settings-label">宝宝名字</div>
         <input class="settings-input" type="text" id="setBabyName" placeholder="输入宝宝的名字">
@@ -291,12 +286,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
   <!-- Weather Banner -->
   <div class="weather-banner" id="weatherBanner">
-    <div class="weather-row">
-      <span class="weather-date" id="weatherDate"></span>
-      <span class="weather-desc" id="weatherIcon">--</span>
-      <span class="weather-temp" id="weatherTemp">加载中...</span>
-    </div>
-    <div class="weather-detail" id="weatherDetail"></div>
+    <span class="wx-date" id="weatherDate"></span>
+    <span class="wx-icon" id="weatherIcon">--</span>
+    <span class="wx-temp" id="weatherTemp">加载中...</span>
+    <span id="weatherDetail"></span>
   </div>
 
   <!-- Growth Banner -->
@@ -312,16 +305,16 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
   <!-- Tabs -->
   <div class="tab-bar">
-    <button class="tab-btn active" onclick="switchTab('record')">📝 打卡</button>
-    <button class="tab-btn" onclick="switchTab('analysis')">📊 分析</button>
-    <button class="tab-btn" id="alertTabBtn" onclick="switchTab('alerts')">🔔 提醒<span class="tab-dot" id="alertDot" style="display:none"></span></button>
+    <button class="tab-btn active" onclick="switchTab('record')">打卡</button>
+    <button class="tab-btn" onclick="switchTab('analysis')">分析</button>
+    <button class="tab-btn" id="alertTabBtn" onclick="switchTab('alerts')">提醒<span class="tab-dot" id="alertDot" style="display:none"></span></button>
   </div>
 
   <!-- Record Tab -->
   <div class="tab-content active" id="tabRecord">
     <div class="section open" id="secFeeding">
       <div class="section-header" onclick="toggleSection('secFeeding')">
-        <div class="section-title">🍽️ 喂养打卡 <span class="section-chip none" id="chipFeeding">未记录</span></div>
+        <div class="section-title">喂养打卡 <span class="section-chip none" id="chipFeeding">未记录</span></div>
         <span class="section-toggle">▼</span>
       </div>
       <div class="section-body">
@@ -332,7 +325,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
     <div class="section" id="secActivity">
       <div class="section-header" onclick="toggleSection('secActivity')">
-        <div class="section-title">🏃 活动打卡 <span class="section-chip none" id="chipActivity">未记录</span></div>
+        <div class="section-title">活动打卡 <span class="section-chip none" id="chipActivity">未记录</span></div>
         <span class="section-toggle">▼</span>
       </div>
       <div class="section-body" id="activityBody"></div>
@@ -340,7 +333,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
     <div class="section" id="secSleep">
       <div class="section-header" onclick="toggleSection('secSleep')">
-        <div class="section-title">😴 睡眠记录 <span class="section-chip none" id="chipSleep">未记录</span></div>
+        <div class="section-title">睡眠记录 <span class="section-chip none" id="chipSleep">未记录</span></div>
         <span class="section-toggle">▼</span>
       </div>
       <div class="section-body" id="sleepBody"></div>
@@ -348,7 +341,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
     <div class="section" id="secWater">
       <div class="section-header" onclick="toggleSection('secWater')">
-        <div class="section-title">💧 饮水记录 <span class="section-chip none" id="chipWater">未记录</span></div>
+        <div class="section-title">饮水记录 <span class="section-chip none" id="chipWater">未记录</span></div>
         <span class="section-toggle">▼</span>
       </div>
       <div class="section-body" id="waterBody"></div>
@@ -356,7 +349,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
     <div class="section" id="secSupps">
       <div class="section-header" onclick="toggleSection('secSupps')">
-        <div class="section-title">💊 补充剂 <span class="section-chip none" id="chipSupps">未记录</span></div>
+        <div class="section-title">补充剂 <span class="section-chip none" id="chipSupps">未记录</span></div>
         <span class="section-toggle">▼</span>
       </div>
       <div class="section-body" id="suppsBody"></div>
@@ -365,7 +358,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     <!-- Measurement Section (at bottom of record tab) -->
     <div class="section open" id="secMeasure">
       <div class="section-header" onclick="toggleSection('secMeasure')">
-        <div class="section-title">📏 安安的生长发育 <span class="section-chip" id="chipMeasure" style="display:none"></span></div>
+        <div class="section-title">生长发育 <span class="section-chip" id="chipMeasure" style="display:none"></span></div>
         <span class="section-toggle">▼</span>
       </div>
       <div class="section-body" id="measureBody"></div>
@@ -937,30 +930,30 @@ async function refreshWeather() {
 function renderWeather() {
   const now = new Date();
   const weekdays = ['日','一','二','三','四','五','六'];
-  const dateStr = now.getFullYear()+'年'+(now.getMonth()+1)+'月'+now.getDate()+'日';
-  const wkday = '周' + weekdays[now.getDay()];
-  document.getElementById('weatherDate').innerHTML = dateStr + '<span class="wkday">' + wkday + '</span>';
+  const dateStr = (now.getMonth()+1)+'/'+now.getDate()+' 周'+weekdays[now.getDay()];
+  document.getElementById('weatherDate').textContent = dateStr;
 
   if (weatherData) {
     document.getElementById('weatherIcon').textContent = weatherData.icon;
-    let tempStr = weatherData.temp + '°C';
-    if (weatherData.tempMax) tempStr += ' / ' + weatherData.tempMin + '°C';
+    let tempStr = weatherData.temp + '°';
+    if (weatherData.tempMax) tempStr += ' ' + weatherData.tempMax + '/' + weatherData.tempMin;
     document.getElementById('weatherTemp').textContent = tempStr;
 
-    let detail = weatherData.desc;
-    if (weatherData.city) detail += ' · ' + weatherData.city;
+    let detail = '';
+    if (weatherData.city) detail += weatherData.city;
+    if (weatherData.desc) detail += ' ' + weatherData.desc;
 
     if (weatherData.uv !== null && weatherData.uv !== undefined) {
       const uvInfo = getUVLevel(weatherData.uv);
-      detail += ' | 紫外线 <span class="uv-tag ' + uvInfo.cls + '">' + uvInfo.label + ' (UV' + weatherData.uv + ')</span>';
-      detail += ' | 🧴 ' + uvInfo.advice;
+      detail += ' UV ' + weatherData.uv + ' <span class="wx-uv ' + uvInfo.cls + '">' + uvInfo.label + '</span>';
+      detail += ' <span class="wx-advice">' + uvInfo.advice + '</span>';
     }
     document.getElementById('weatherDetail').innerHTML = detail;
   } else {
-    document.getElementById('weatherIcon').textContent = '🌡️';
-    document.getElementById('weatherTemp').textContent = '设置城市后获取天气';
+    document.getElementById('weatherIcon').textContent = '—';
+    document.getElementById('weatherTemp').textContent = '';
     const profile = getBabyProfile();
-    document.getElementById('weatherDetail').innerHTML = profile.city ? '天气加载中...' : '<span style="cursor:pointer;color:var(--green)" onclick="openSettings()">点击设置城市 →</span>';
+    document.getElementById('weatherDetail').innerHTML = profile.city ? '天气加载中...' : '<span class="wx-hint" onclick="openSettings()">设置城市</span>';
   }
 }
 
@@ -980,7 +973,7 @@ function renderGrowthBanner() {
   const banner = document.getElementById('growthBanner');
 
   if (!m.height && !m.weight && !m.foot) {
-    banner.innerHTML = '<div class="growth-empty">📏 暂无生长发育数据，<span style="color:var(--green);cursor:pointer;text-decoration:underline" onclick="goToMeasure()">去记录 →</span></div>';
+    banner.innerHTML = '<div class="growth-empty">暂无生长发育数据，<span style="color:var(--green);cursor:pointer;text-decoration:underline" onclick="goToMeasure()">去记录</span></div>';
     return;
   }
 
@@ -991,24 +984,24 @@ function renderGrowthBanner() {
   if (m.height?.value) {
     const std = getGrowthRef(gender, 'height', ageM);
     const eval_ = evaluateGrowth(m.height.value, std);
-    html += '<div class="growth-item"><span class="g-icon">📏</span><span class="g-val">' + m.height.value + '</span><span class="g-unit">cm</span>' + (eval_ ? '<span class="g-status ' + eval_.level + '">' + eval_.label + '</span>' : '') + '</div>';
+    html += '<div class="g-item"><span class="g-label">身高</span><span class="g-val">' + m.height.value + '</span><span class="g-unit">cm</span>' + (eval_ ? '<span class="g-dot ' + eval_.level + '"></span>' : '') + '</div>';
   }
 
   if (m.weight?.value) {
     const std = getGrowthRef(gender, 'weight', ageM);
     const eval_ = evaluateGrowth(m.weight.value, std);
-    html += '<div class="growth-item"><span class="g-icon">⚖️</span><span class="g-val">' + m.weight.value + '</span><span class="g-unit">kg</span>' + (eval_ ? '<span class="g-status ' + eval_.level + '">' + eval_.label + '</span>' : '') + '</div>';
+    html += '<div class="g-item"><span class="g-label">体重</span><span class="g-val">' + m.weight.value + '</span><span class="g-unit">kg</span>' + (eval_ ? '<span class="g-dot ' + eval_.level + '"></span>' : '') + '</div>';
   }
 
   if (m.foot?.value) {
-    html += '<div class="growth-item"><span class="g-icon">👣</span><span class="g-val">' + m.foot.value + '</span><span class="g-unit">cm</span></div>';
+    html += '<div class="g-item"><span class="g-label">脚长</span><span class="g-val">' + m.foot.value + '</span><span class="g-unit">cm</span></div>';
   }
 
   // Show latest update date
   const dates = [m.height?.date, m.weight?.date, m.foot?.date].filter(Boolean);
   const latestDate = dates.sort().reverse()[0];
   if (latestDate) {
-    html += '<div class="growth-date">📅 ' + latestDate + ' 更新</div>';
+    html += '<div class="g-date">' + latestDate + ' 更新</div>';
   }
 
   banner.innerHTML = html;
@@ -1022,13 +1015,13 @@ function renderMeasurements() {
   const canEdit = isCreator();
   const disabled = canEdit ? '' : ' disabled';
 
-  let html = '<div style="font-size:12px;color:var(--text2);margin-bottom:12px">';
-  html += canEdit ? '记录安安的身高、体重和脚长，数据将自动与同龄标准进行对比评估。' : '👑 仅主账号可更新安安的生长发育数据';
+  let html = '<div style="font-size:11px;color:var(--text2);margin-bottom:10px">';
+  html += canEdit ? '记录身高、体重和脚长，自动与同龄标准对比' : '仅主账号可更新生长发育数据';
   html += '</div>';
 
   // Height
   html += '<div class="measure-input-row">';
-  html += '<div class="measure-label"><span class="measure-icon">📏</span> 身高</div>';
+  html += '<div class="measure-label">身高</div>';
   html += '<div class="measure-field">';
   html += '<input type="number" id="measHeight" value="' + (m.height?.value || '') + '" placeholder="cm" min="40" max="130" step="0.1"' + disabled + '>';
   html += '<span class="m-unit">cm</span>';
@@ -1037,7 +1030,7 @@ function renderMeasurements() {
 
   // Weight
   html += '<div class="measure-input-row">';
-  html += '<div class="measure-label"><span class="measure-icon">⚖️</span> 体重</div>';
+  html += '<div class="measure-label">体重</div>';
   html += '<div class="measure-field">';
   html += '<input type="number" id="measWeight" value="' + (m.weight?.value || '') + '" placeholder="kg" min="2" max="30" step="0.1"' + disabled + '>';
   html += '<span class="m-unit">kg</span>';
@@ -1046,7 +1039,7 @@ function renderMeasurements() {
 
   // Foot length
   html += '<div class="measure-input-row">';
-  html += '<div class="measure-label"><span class="measure-icon">👣</span> 脚长</div>';
+  html += '<div class="measure-label">脚长</div>';
   html += '<div class="measure-field">';
   html += '<input type="number" id="measFoot" value="' + (m.foot?.value || '') + '" placeholder="cm" min="7" max="25" step="0.1"' + disabled + '>';
   html += '<span class="m-unit">cm</span>';
@@ -1055,21 +1048,21 @@ function renderMeasurements() {
 
   // History
   if (profile.measurementHistory && profile.measurementHistory.length > 0) {
-    html += '<div class="measure-history"><div style="font-weight:600;margin-bottom:4px">📋 历史记录</div>';
+    html += '<div class="measure-history"><div style="font-weight:600;margin-bottom:3px">历史记录</div>';
     const sorted = profile.measurementHistory.slice().sort((a,b) => b.date.localeCompare(a.date)).slice(0, 5);
     for (const r of sorted) {
       const parts = [];
-      if (r.height) parts.push('📏'+r.height+'cm');
-      if (r.weight) parts.push('⚖️'+r.weight+'kg');
-      if (r.foot) parts.push('👣'+r.foot+'cm');
+      if (r.height) parts.push(r.height+'cm');
+      if (r.weight) parts.push(r.weight+'kg');
+      if (r.foot) parts.push(r.foot+'cm');
       html += '<div class="measure-history-row"><span>' + r.date + '</span><span>' + parts.join(' ') + '</span></div>';
     }
     html += '</div>';
   }
 
   if (canEdit) {
-    html += '<div class="confirm-row"><button class="confirm-btn" onclick="saveMeasurements()">💾 保存数据</button></div>';
-    html += '<div class="confirm-hint">保存后数据将显示在顶部，并与同龄标准自动对比</div>';
+    html += '<div class="confirm-row"><button class="confirm-btn" onclick="saveMeasurements()">保存数据</button></div>';
+    html += '<div class="confirm-hint">保存后数据显示在顶部并与同龄标准对比</div>';
   }
 
   document.getElementById('measureBody').innerHTML = html;
@@ -1463,7 +1456,7 @@ function renderSupps() {
   const hasAny = sup.ad || sup.dha;
   const p = confirmed ? 'pointer-events:none' : '';
   let html = '';
-  html += '<div class="activity-row"><span>💊 维生素AD（A 1500-2000U + D 400-800U）</span><div class="act-check'+(sup.ad?' checked':'')+'" onclick="'+(confirmed?'':'toggleSuppPending(&quot;ad&quot;)')+'" style="'+p+'"></div></div>';
+  html += '<div class="activity-row"><span>维生素AD</span><div class="act-check'+(sup.ad?' checked':'')+'" onclick="'+(confirmed?'':'toggleSuppPending(&quot;ad&quot;)')+'" style="'+p+'"></div></div>';
   html += '<div class="activity-row"><span>🐟 DHA（建议补充）</span><div class="act-check'+(sup.dha?' checked':'')+'" onclick="'+(confirmed?'':'toggleSuppPending(&quot;dha&quot;)')+'" style="'+p+'"></div></div>';
   html += '<div class="science-card"><div class="science-title">📚 科学依据</div><div class="science-text">《中国儿童维生素A、维生素D临床应用专家共识（2024）》：<b>每日持续补充AD，不建议与D3交替</b>。交替会降低依从性。维生素A让D的生物活性提升 <b>130%</b>。建议补充至 <b>青春期</b>。</div></div>';
   if (confirmed) {
@@ -1582,16 +1575,16 @@ function renderAnalysis() {
   const m = profile.measurements;
 
   if (m.height?.value || m.weight?.value) {
-    html += '<div class="analysis-dim"><div class="analysis-dim-title">📏 生长发育 <span style="font-size:11px;font-weight:400;color:var(--text2)">（WHO标准，'+ageM+'个月'+(gender==='boy'?'男':'女')+'童）</span></div>';
+    html += '<div class="analysis-dim"><div class="analysis-dim-title">生长发育 <span style="font-size:11px;font-weight:400;color:var(--text2)">WHO标准 ' + ageM + '个月' + (gender==='boy'?'男':'女') + '童</span></div>';
 
     if (m.height?.value) {
       const hRef = getGrowthRef(gender, 'height', ageM);
       const hEval = evaluateGrowth(m.height.value, hRef);
       const hPct = hRef ? Math.min(100, Math.round(m.height.value / hRef.p50 * 100)) : 0;
-      html += '<div class="analysis-item"><div class="analysis-header"><span class="analysis-name">📏 身高</span><span class="analysis-status '+(hEval?.level||'ok')+'">'+(hEval?.label||'--')+'</span></div>';
+      html += '<div class="analysis-item"><div class="analysis-header"><span class="analysis-name">身高</span><span class="analysis-status '+(hEval?.level||'ok')+'">'+(hEval?.label||'--')+'</span></div>';
       html += '<div class="analysis-bar"><div class="analysis-fill '+(hEval?.level||'ok')+'" style="width:'+hPct+'%"></div></div>';
-      html += '<div class="analysis-detail">实际 '+m.height.value+' cm / 参考 P50: '+hRef.p50+' cm (P3-P97: '+hRef.p3+'-'+hRef.p97+' cm)</div>';
-      if (hEval?.desc) html += '<div class="growth-advice '+hEval.level+'">💡 '+hEval.desc+'</div>';
+      html += '<div class="analysis-detail">实际 ' + m.height.value + ' cm / 参考 P50: ' + hRef.p50 + ' cm（P3-P97: ' + hRef.p3 + '-' + hRef.p97 + '）</div>';
+      if (hEval?.desc) html += '<div class="growth-advice ' + hEval.level + '">' + hEval.desc + '</div>';
       html += '</div>';
     }
 
@@ -1599,17 +1592,17 @@ function renderAnalysis() {
       const wRef = getGrowthRef(gender, 'weight', ageM);
       const wEval = evaluateGrowth(m.weight.value, wRef);
       const wPct = wRef ? Math.min(100, Math.round(m.weight.value / wRef.p50 * 100)) : 0;
-      html += '<div class="analysis-item"><div class="analysis-header"><span class="analysis-name">⚖️ 体重</span><span class="analysis-status '+(wEval?.level||'ok')+'">'+(wEval?.label||'--')+'</span></div>';
+      html += '<div class="analysis-item"><div class="analysis-header"><span class="analysis-name">体重</span><span class="analysis-status '+(wEval?.level||'ok')+'">'+(wEval?.label||'--')+'</span></div>';
       html += '<div class="analysis-bar"><div class="analysis-fill '+(wEval?.level||'ok')+'" style="width:'+wPct+'%"></div></div>';
-      html += '<div class="analysis-detail">实际 '+m.weight.value+' kg / 参考 P50: '+wRef.p50+' kg (P3-P97: '+wRef.p3+'-'+wRef.p97+' kg)</div>';
-      if (wEval?.desc) html += '<div class="growth-advice '+wEval.level+'">💡 '+wEval.desc+'</div>';
+      html += '<div class="analysis-detail">实际 ' + m.weight.value + ' kg / 参考 P50: ' + wRef.p50 + ' kg（P3-P97: ' + wRef.p3 + '-' + wRef.p97 + '）</div>';
+      if (wEval?.desc) html += '<div class="growth-advice ' + wEval.level + '">' + wEval.desc + '</div>';
       html += '</div>';
     }
 
     if (m.foot?.value) {
       const fRef = getFootRef(ageM);
-      html += '<div class="analysis-item"><div class="analysis-header"><span class="analysis-name">👣 脚长</span><span class="analysis-status ok">参考 '+fRef+' cm</span></div>';
-      html += '<div class="analysis-detail">实际 '+m.foot.value+' cm / 同龄参考 '+fRef+' cm（用于选鞋参考）</div></div>';
+      html += '<div class="analysis-item"><div class="analysis-header"><span class="analysis-name">脚长</span><span class="analysis-status ok">参考 ' + fRef + ' cm</span></div>';
+      html += '<div class="analysis-detail">实际 ' + m.foot.value + ' cm / 同龄参考 ' + fRef + ' cm</div></div>';
     }
 
     if (m.height?.value && m.weight?.value && gender) {
@@ -1618,15 +1611,15 @@ function renderAnalysis() {
       if (bmi < 13) bmiAdvice = '偏瘦，注意加强蛋白质摄入';
       else if (bmi > 18) bmiAdvice = '偏重，注意控制零食和糖分摄入';
       else bmiAdvice = '体型匀称，保持均衡饮食';
-      html += '<div class="analysis-item"><div class="analysis-header"><span class="analysis-name">📐 BMI指数</span><span class="analysis-status ok">'+bmi+'</span></div>';
-      html += '<div class="analysis-detail">BMI = '+m.weight.value+' ÷ ('+(m.height.value/100)+'²) = '+bmi+' · '+bmiAdvice+'</div></div>';
+      html += '<div class="analysis-item"><div class="analysis-header"><span class="analysis-name">BMI 指数</span><span class="analysis-status ok">' + bmi + '</span></div>';
+      html += '<div class="analysis-detail">BMI = ' + m.weight.value + ' ÷ (' + (m.height.value/100) + ')² = ' + bmi + ' · ' + bmiAdvice + '</div></div>';
     }
 
     html += '</div>';
   }
 
   // 1. Diet
-  html += '<div class="analysis-dim"><div class="analysis-dim-title">🍽️ 饮食摄入</div>';
+  html += '<div class="analysis-dim"><div class="analysis-dim-title">饮食摄入</div>';
   const dietCats = [
     { name:'奶类', unit:'ml', actual:milk, refMin:ref.milk.min, refMax:ref.milk.max },
     { name:'谷物', unit:'克', actual:grain, refMin:ref.grain.min, refMax:ref.grain.max },
@@ -1638,14 +1631,14 @@ function renderAnalysis() {
   html += '</div>';
 
   // 2. Sleep
-  html += '<div class="analysis-dim"><div class="analysis-dim-title">😴 睡眠</div>';
+  html += '<div class="analysis-dim"><div class="analysis-dim-title">睡眠</div>';
   html += renderAnalysisItem({ name:'夜间睡眠', unit:'h', actual:state.sleep.night, refMin:ref.sleep.night*-0.1+ref.sleep.night, refMax:ref.sleep.night*1.1 }, 'min');
   html += renderAnalysisItem({ name:'日间小睡', unit:'h', actual:state.sleep.nap_am+state.sleep.nap_pm, refMin:ref.sleep.naps*-0.15+ref.sleep.naps, refMax:ref.sleep.naps*1.15 }, 'min');
   html += renderAnalysisItem({ name:'总睡眠', unit:'h', actual:totalSleep, refMin:ref.sleep.total*-0.1+ref.sleep.total, refMax:ref.sleep.total*1.1 }, 'min');
   html += '</div>';
 
   // 3. Activity
-  html += '<div class="analysis-dim"><div class="analysis-dim-title">🏃 活动</div>';
+  html += '<div class="analysis-dim"><div class="analysis-dim-title">活动</div>';
   html += renderAnalysisItem({ name:'户外活动', unit:'分钟', actual:outdoor, refMin:ref.outdoor.min, refMax:ref.outdoor.max }, 'min');
   const gameCount = Object.keys(state.activity.games||{}).length;
   const gameMin = Object.values(state.activity.games||{}).reduce((s,v)=>s+(v||0),0);
@@ -1654,18 +1647,18 @@ function renderAnalysis() {
   html += '</div>';
 
   // 4. Water
-  html += '<div class="analysis-dim"><div class="analysis-dim-title">💧 饮水</div>';
+  html += '<div class="analysis-dim"><div class="analysis-dim-title">饮水</div>';
   html += renderAnalysisItem({ name:'饮水量', unit:'ml', actual:water, refMin:ref.water.min, refMax:ref.water.max }, 'min');
   html += '</div>';
 
   // 5. Supplements
-  html += '<div class="analysis-dim"><div class="analysis-dim-title">💊 补充剂</div>';
+  html += '<div class="analysis-dim"><div class="analysis-dim-title">补充剂</div>';
   html += renderAnalysisItem({ name:'维生素AD', unit:'', actual:state.supplements.ad?1:0, refMin:1, refMax:1 }, 'count');
   html += renderAnalysisItem({ name:'DHA', unit:'', actual:state.supplements.dha?1:0, refMin:0.5, refMax:1 }, 'count');
   html += '</div>';
 
   // 6. Milestones
-  html += '<div class="analysis-dim"><div class="analysis-dim-title">📏 发育里程碑 <span style="font-size:11px;font-weight:400;color:var(--text2)">（参考对照）</span></div>';
+  html += '<div class="analysis-dim"><div class="analysis-dim-title">发育里程碑 <span style="font-size:11px;font-weight:400;color:var(--text2)">参考对照</span></div>';
   for (const mile of (ref.milestones||[])) {
     html += '<div style="padding:8px 12px;font-size:13px;color:var(--text2);display:flex;align-items:center;gap:8px"><span style="color:var(--blue)">○</span> '+mile+'</div>';
   }
