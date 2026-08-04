@@ -444,7 +444,7 @@ function defaultFeeding() {
 function defaultData() {
   return {
     feeding: defaultFeeding(),
-    activity: { confirmed:false, outdoor_am:false, outdoor_am_min:30, outdoor_pm:false, outdoor_pm_min:30, walking:false, walking_min:15, games:[] },
+    activity: { confirmed:false, outdoor_am:false, outdoor_am_min:30, outdoor_pm:false, outdoor_pm_min:30, walking:false, walking_min:15, games:{} },
     sleep: { confirmed:false, night:0, nap_am:0, nap_pm:0 },
     water: { confirmed:false, records:[] },
     supplements: { confirmed:false, ad:false, dha:false }
@@ -474,6 +474,12 @@ function loadData() {
         if (data.sleep && data.sleep.confirmed === undefined) data.sleep.confirmed = false;
         if (data.water && data.water.confirmed === undefined) data.water.confirmed = false;
         if (data.supplements && data.supplements.confirmed === undefined) data.supplements.confirmed = false;
+        // Migrate: games from array to object
+        if (data.activity && Array.isArray(data.activity.games)) {
+          const obj = {};
+          data.activity.games.forEach(id => { obj[id] = 15; });
+          data.activity.games = obj;
+        }
         return data;
       }
     }
@@ -517,7 +523,7 @@ function syncToServer() {
         outdoor_am: state.activity.outdoor_am ? state.activity.outdoor_am_min : 0,
         outdoor_pm: state.activity.outdoor_pm ? state.activity.outdoor_pm_min : 0,
         walking: state.activity.walking ? state.activity.walking_min : 0,
-        games: state.activity.games || []
+        games: state.activity.games || {}
       }
     },
     { name: 'sleep', data: {
@@ -910,47 +916,38 @@ function renderActivity() {
   const a = state.activity;
   const confirmed = a.confirmed === true;
   const ref = getAgeRef();
-  const hasAny = a.outdoor_am || a.outdoor_pm || a.walking || a.games.length > 0;
+  const gameIds = Object.keys(a.games||{});
+  const hasAny = a.outdoor_am || a.outdoor_pm || a.walking || gameIds.length > 0;
   const totalOutdoor = (a.outdoor_am?a.outdoor_am_min:0)+(a.outdoor_pm?a.outdoor_pm_min:0);
+  const totalGame = gameIds.reduce((s,id) => s + (a.games[id]||0), 0);
 
-  let html = `
-    <div class="activity-row">
-      <span class="act-label">☀️ 上午户外</span>
-      <div style="display:flex;align-items:center;gap:6px">
-        <div class="act-check${a.outdoor_am?' checked':''}" onclick="${confirmed?'':'toggleActPending(\"outdoor_am\")'}" style="${confirmed?'pointer-events:none':''}"></div>
-        <div class="food-qty">
-          <button class="food-qty-btn" onclick="${confirmed?'':'adjustActPending(\"outdoor_am_min\",-15)'}" ${confirmed?'disabled':''}>−</button><span class="food-qty-val">${a.outdoor_am_min}</span><button class="food-qty-btn" onclick="${confirmed?'':'adjustActPending(\"outdoor_am_min\",15)'}" ${confirmed?'disabled':''}>+</button><span class="qty-unit">分钟</span>
-        </div>
-      </div>
-    </div>
-    <div class="activity-row">
-      <span class="act-label">🌤️ 下午户外</span>
-      <div style="display:flex;align-items:center;gap:6px">
-        <div class="act-check${a.outdoor_pm?' checked':''}" onclick="${confirmed?'':'toggleActPending(\"outdoor_pm\")'}" style="${confirmed?'pointer-events:none':''}"></div>
-        <div class="food-qty">
-          <button class="food-qty-btn" onclick="${confirmed?'':'adjustActPending(\"outdoor_pm_min\",-15)'}" ${confirmed?'disabled':''}>−</button><span class="food-qty-val">${a.outdoor_pm_min}</span><button class="food-qty-btn" onclick="${confirmed?'':'adjustActPending(\"outdoor_pm_min\",15)'}" ${confirmed?'disabled':''}>+</button><span class="qty-unit">分钟</span>
-        </div>
-      </div>
-    </div>
-    <div class="activity-row">
-      <span class="act-label">🚶 行走练习</span>
-      <div style="display:flex;align-items:center;gap:6px">
-        <div class="act-check${a.walking?' checked':''}" onclick="${confirmed?'':'toggleActPending(\"walking\")'}" style="${confirmed?'pointer-events:none':''}"></div>
-        <div class="food-qty">
-          <button class="food-qty-btn" onclick="${confirmed?'':'adjustActPending(\"walking_min\",-5)'}" ${confirmed?'disabled':''}>−</button><span class="food-qty-val">${a.walking_min}</span><button class="food-qty-btn" onclick="${confirmed?'':'adjustActPending(\"walking_min\",5)'}" ${confirmed?'disabled':''}>+</button><span class="qty-unit">分钟</span>
-        </div>
-      </div>
-    </div>
-    <div style="margin-top:12px;font-size:13px;font-weight:600;color:var(--text2)">亲子互动</div>
-    <div class="game-grid">
-      ${GAMES.map(g => `<div class="game-card${a.games.includes(g.id)?' selected':''}" onclick="${confirmed?'':'toggleGamePending(\"${g.id}\")'}" style="${confirmed?'pointer-events:none':''}"><span class="game-emoji">${g.emoji}</span>${g.name}</div>`).join('')}
-    </div>
-    <div class="bottom-summary">总户外：${totalOutdoor} 分钟 <span class="ref">参考 ${ref.outdoor.min}-${ref.outdoor.max} 分钟</span> | 游戏 ${a.games.length} 项</div>`;
+  const d = confirmed ? ' disabled' : '';
+  const p = confirmed ? 'pointer-events:none' : '';
+
+  let html = '';
+  html += '<div class="activity-row"><span class="act-label">☀️ 上午户外</span><div style="display:flex;align-items:center;gap:6px"><div class="act-check' + (a.outdoor_am?' checked':'') + '" onclick="' + (confirmed?'':'toggleActPending(&quot;outdoor_am&quot;)') + '" style="' + p + '"></div><div class="food-qty"><button class="food-qty-btn" onclick="' + (confirmed?'':'adjustActPending(&quot;outdoor_am_min&quot;,-15)') + '"' + d + '>−</button><span class="food-qty-val">' + a.outdoor_am_min + '</span><button class="food-qty-btn" onclick="' + (confirmed?'':'adjustActPending(&quot;outdoor_am_min&quot;,15)') + '"' + d + '>+</button><span class="qty-unit">分钟</span></div></div></div>';
+
+  html += '<div class="activity-row"><span class="act-label">🌤️ 下午户外</span><div style="display:flex;align-items:center;gap:6px"><div class="act-check' + (a.outdoor_pm?' checked':'') + '" onclick="' + (confirmed?'':'toggleActPending(&quot;outdoor_pm&quot;)') + '" style="' + p + '"></div><div class="food-qty"><button class="food-qty-btn" onclick="' + (confirmed?'':'adjustActPending(&quot;outdoor_pm_min&quot;,-15)') + '"' + d + '>−</button><span class="food-qty-val">' + a.outdoor_pm_min + '</span><button class="food-qty-btn" onclick="' + (confirmed?'':'adjustActPending(&quot;outdoor_pm_min&quot;,15)') + '"' + d + '>+</button><span class="qty-unit">分钟</span></div></div></div>';
+
+  html += '<div class="activity-row"><span class="act-label">🚶 行走练习</span><div style="display:flex;align-items:center;gap:6px"><div class="act-check' + (a.walking?' checked':'') + '" onclick="' + (confirmed?'':'toggleActPending(&quot;walking&quot;)') + '" style="' + p + '"></div><div class="food-qty"><button class="food-qty-btn" onclick="' + (confirmed?'':'adjustActPending(&quot;walking_min&quot;,-5)') + '"' + d + '>−</button><span class="food-qty-val">' + a.walking_min + '</span><button class="food-qty-btn" onclick="' + (confirmed?'':'adjustActPending(&quot;walking_min&quot;,5)') + '"' + d + '>+</button><span class="qty-unit">分钟</span></div></div></div>';
+
+  // Game cards with time adjustment
+  html += '<div style="margin-top:14px;font-size:13px;font-weight:600;color:var(--text2)">亲子互动 <span style="font-weight:400;color:var(--text3)">（' + totalGame + ' 分钟）</span></div>';
+  html += '<div class="game-grid">';
+  for (let i = 0; i < GAMES.length; i++) {
+    const g = GAMES[i];
+    const sel = gameIds.includes(g.id);
+    const gm = sel && !confirmed ? ('<div style="margin-top:6px;display:flex;align-items:center;gap:4px;justify-content:center"><button class="food-qty-btn" style="font-size:11px;padding:1px 6px" onclick="event.stopPropagation();adjustGameTimePending(&quot;' + g.id + '&quot;,-5)">−</button><span style="font-size:12px;color:var(--text)">' + (a.games[g.id]||15) + '</span><button class="food-qty-btn" style="font-size:11px;padding:1px 6px" onclick="event.stopPropagation();adjustGameTimePending(&quot;' + g.id + '&quot;,5)">+</button><span style="font-size:10px;color:var(--text3)">分钟</span></div>') : (sel ? ('<div style="margin-top:6px;font-size:11px;color:var(--text3)">' + (a.games[g.id]||15) + ' 分钟</div>') : '');
+    html += '<div class="game-card' + (sel?' selected':'') + '" onclick="' + (confirmed?'':'toggleGamePending(&quot;' + g.id + '&quot;)') + '" style="' + p + '"><span class="game-emoji">' + g.emoji + '</span>' + g.name + gm + '</div>';
+  }
+  html += '</div>';
+
+  html += '<div class="bottom-summary">总户外：' + totalOutdoor + ' 分钟 <span class="ref">参考 ' + ref.outdoor.min + '-' + ref.outdoor.max + ' 分钟</span> | 游戏 ' + gameIds.length + ' 项 ' + totalGame + ' 分钟</div>';
 
   if (confirmed) {
-    html += `<div class="confirm-row"><span class="confirm-done">✅ 已打卡</span><button class="confirm-edit-btn" onclick="unconfirmActivity()">修改</button></div>`;
+    html += '<div class="confirm-row"><span class="confirm-done">✅ 已打卡</span><button class="confirm-edit-btn" onclick="unconfirmActivity()">修改</button></div>';
   } else {
-    html += `<div class="confirm-row"><button class="confirm-btn"${!hasAny?' disabled':''} onclick="confirmActivity()">✅ 确认打卡</button></div>`;
+    html += '<div class="confirm-row"><button class="confirm-btn"' + (!hasAny?' disabled':'') + ' onclick="confirmActivity()">✅ 确认打卡</button></div>';
     if (!hasAny) html += '<div class="confirm-hint">请先勾选户外活动、行走练习或亲子游戏，然后确认打卡</div>';
   }
 
@@ -959,9 +956,20 @@ function renderActivity() {
 function toggleActPending(prop) { state.activity[prop] = !state.activity[prop]; renderActivity(); updateChipsOnly(); }
 function adjustActPending(prop, d) { state.activity[prop] = Math.max(0, state.activity[prop]+d); renderActivity(); updateChipsOnly(); }
 function toggleGamePending(id) {
-  const i = state.activity.games.indexOf(id);
-  if (i>=0) state.activity.games.splice(i,1); else state.activity.games.push(id);
+  if (!state.activity.games) state.activity.games = {};
+  if (state.activity.games[id]) {
+    delete state.activity.games[id];
+  } else {
+    state.activity.games[id] = 15;
+  }
   renderActivity(); updateChipsOnly();
+}
+function adjustGameTimePending(id, d) {
+  if (!state.activity.games) state.activity.games = {};
+  if (state.activity.games[id]) {
+    state.activity.games[id] = Math.max(5, Math.min(120, state.activity.games[id] + d));
+    renderActivity(); updateChipsOnly();
+  }
 }
 function confirmActivity() { state.activity.confirmed = true; saveData(state); }
 function unconfirmActivity() { state.activity.confirmed = false; saveData(state); }
@@ -973,11 +981,12 @@ function renderSleep() {
   const ref = getAgeRef();
   const total = s.night + s.nap_am + s.nap_pm;
   const hasAny = total > 0;
+  const d = confirmed ? ' disabled' : '';
 
-  let html = `
-    <div class="sleep-row"><span>🌙 夜间睡眠</span><div class="food-qty"><button class="food-qty-btn" onclick="${confirmed?'':'adjustSleepPending(\"night\",-0.5)'}" ${confirmed?'disabled':''}>−</button><span class="food-qty-val">${s.night}</span><button class="food-qty-btn" onclick="${confirmed?'':'adjustSleepPending(\"night\",0.5)'}" ${confirmed?'disabled':''}>+</button><span class="qty-unit">小时</span></div></div>
-    <div class="sleep-row"><span>☀️ 上午小睡</span><div class="food-qty"><button class="food-qty-btn" onclick="${confirmed?'':'adjustSleepPending(\"nap_am\",-0.5)'}" ${confirmed?'disabled':''}>−</button><span class="food-qty-val">${s.nap_am}</span><button class="food-qty-btn" onclick="${confirmed?'':'adjustSleepPending(\"nap_am\",0.5)'}" ${confirmed?'disabled':''}>+</button><span class="qty-unit">小时</span></div></div>
-    <div class="sleep-row"><span>🌤️ 下午小睡</span><div class="food-qty"><button class="food-qty-btn" onclick="${confirmed?'':'adjustSleepPending(\"nap_pm\",-0.5)'}" ${confirmed?'disabled':''}>−</button><span class="food-qty-val">${s.nap_pm}</span><button class="food-qty-btn" onclick="${confirmed?'':'adjustSleepPending(\"nap_pm\",0.5)'}" ${confirmed?'disabled':''}>+</button><span class="qty-unit">小时</span></div></div>`;
+  let html = '';
+  html += '<div class="sleep-row"><span>🌙 夜间睡眠</span><div class="food-qty"><button class="food-qty-btn" onclick="' + (confirmed?'':'adjustSleepPending(&quot;night&quot;,-0.5)') + '"' + d + '>−</button><span class="food-qty-val">' + s.night + '</span><button class="food-qty-btn" onclick="' + (confirmed?'':'adjustSleepPending(&quot;night&quot;,0.5)') + '"' + d + '>+</button><span class="qty-unit">小时</span></div></div>';
+  html += '<div class="sleep-row"><span>☀️ 上午小睡</span><div class="food-qty"><button class="food-qty-btn" onclick="' + (confirmed?'':'adjustSleepPending(&quot;nap_am&quot;,-0.5)') + '"' + d + '>−</button><span class="food-qty-val">' + s.nap_am + '</span><button class="food-qty-btn" onclick="' + (confirmed?'':'adjustSleepPending(&quot;nap_am&quot;,0.5)') + '"' + d + '>+</button><span class="qty-unit">小时</span></div></div>';
+  html += '<div class="sleep-row"><span>🌤️ 下午小睡</span><div class="food-qty"><button class="food-qty-btn" onclick="' + (confirmed?'':'adjustSleepPending(&quot;nap_pm&quot;,-0.5)') + '"' + d + '>−</button><span class="food-qty-val">' + s.nap_pm + '</span><button class="food-qty-btn" onclick="' + (confirmed?'':'adjustSleepPending(&quot;nap_pm&quot;,0.5)') + '"' + d + '>+</button><span class="qty-unit">小时</span></div></div>';
 
   const hint = total > 0
     ? (total >= ref.sleep.total * 0.9 ? '✅ 睡眠充足' : total >= ref.sleep.total * 0.7 ? '⚠️ 睡眠偏少' : '❌ 睡眠不足')
@@ -1010,7 +1019,7 @@ function renderWater() {
   for (let i = 0; i < WATER_SLOTS.length; i++) {
     const s = WATER_SLOTS[i];
     const r = records.find(x=>x.slot===s.id);
-    const onclick = confirmed ? '' : 'toggleWaterPending(\"' + s.id + '\")';
+    const onclick = confirmed ? '' : 'toggleWaterPending(&quot;' + s.id + '&quot;)';
     const style = confirmed ? 'pointer-events:none' : '';
     html += '<div class="water-slot' + (r?' recorded':'') + '" onclick="' + onclick + '" style="' + style + '">' + s.emoji + ' ' + s.label + (r?'<span class="slot-amount">' + r.amount + 'ml</span>':'') + '</div>';
   }
@@ -1022,8 +1031,8 @@ function renderWater() {
       const s = WATER_SLOTS.find(s=>s.id===r.slot) || {};
       const emoji = s.emoji || '💧';
       const label = s.label || '';
-      const adjMinus = confirmed ? '' : 'adjustWaterPending(\"' + r.slot + '\",-20)';
-      const adjPlus = confirmed ? '' : 'adjustWaterPending(\"' + r.slot + '\",20)';
+      const adjMinus = confirmed ? '' : 'adjustWaterPending(&quot;' + r.slot + '&quot;,-20)';
+      const adjPlus = confirmed ? '' : 'adjustWaterPending(&quot;' + r.slot + '&quot;,20)';
       const disabled = confirmed ? ' disabled' : '';
       const clearBtn = confirmed ? '' : '<button style="background:none;border:none;color:var(--rose);font-size:12px;cursor:pointer" onclick="removeWaterPending(\'' + r.slot + '\')">清除</button>';
       html += '<div class="activity-row"><span>' + emoji + ' ' + label + '</span><div class="food-qty"><button class="food-qty-btn" onclick="' + adjMinus + '"' + disabled + '>−</button><span class="food-qty-val">' + r.amount + '</span><button class="food-qty-btn" onclick="' + adjPlus + '"' + disabled + '>+</button><span class="qty-unit">ml</span></div>' + clearBtn + '</div>';
@@ -1068,11 +1077,12 @@ function renderSupps() {
   const sup = state.supplements;
   const confirmed = sup.confirmed === true;
   const hasAny = sup.ad || sup.dha;
+  const p = confirmed ? 'pointer-events:none' : '';
 
-  let html = `
-    <div class="activity-row"><span>💊 维生素AD（A 1500-2000U + D 400-800U）</span><div class="act-check${sup.ad?' checked':''}" onclick="${confirmed?'':'toggleSuppPending(\"ad\")'}" style="${confirmed?'pointer-events:none':''}"></div></div>
-    <div class="activity-row"><span>🐟 DHA（建议补充）</span><div class="act-check${sup.dha?' checked':''}" onclick="${confirmed?'':'toggleSuppPending(\"dha\")'}" style="${confirmed?'pointer-events:none':''}"></div></div>
-    <div class="science-card"><div class="science-title">📚 科学依据</div><div class="science-text">《中国儿童维生素A、维生素D临床应用专家共识（2024）》：<b>每日持续补充AD，不建议与D3交替</b>。交替会降低依从性。维生素A让D的生物活性提升 <b>130%</b>。建议补充至 <b>青春期</b>。</div></div>`;
+  let html = '';
+  html += '<div class="activity-row"><span>💊 维生素AD（A 1500-2000U + D 400-800U）</span><div class="act-check' + (sup.ad?' checked':'') + '" onclick="' + (confirmed?'':'toggleSuppPending(&quot;ad&quot;)') + '" style="' + p + '"></div></div>';
+  html += '<div class="activity-row"><span>🐟 DHA（建议补充）</span><div class="act-check' + (sup.dha?' checked':'') + '" onclick="' + (confirmed?'':'toggleSuppPending(&quot;dha&quot;)') + '" style="' + p + '"></div></div>';
+  html += '<div class="science-card"><div class="science-title">📚 科学依据</div><div class="science-text">《中国儿童维生素A、维生素D临床应用专家共识（2024）》：<b>每日持续补充AD，不建议与D3交替</b>。交替会降低依从性。维生素A让D的生物活性提升 <b>130%</b>。建议补充至 <b>青春期</b>。</div></div>';
 
   if (confirmed) {
     html += `<div class="confirm-row"><span class="confirm-done">✅ 已打卡</span><button class="confirm-edit-btn" onclick="unconfirmSupps()">修改</button></div>`;
@@ -1130,7 +1140,7 @@ function renderChips() {
 
   // Activity: confirmed status
   const aConfirmed = state.activity.confirmed === true;
-  const hasAct = state.activity.outdoor_am || state.activity.outdoor_pm || state.activity.walking || state.activity.games.length > 0;
+  const hasAct = state.activity.outdoor_am || state.activity.outdoor_pm || state.activity.walking || Object.keys(state.activity.games||{}).length > 0;
   chip('Activity',{done:aConfirmed,partial:hasAct,txt:'已打卡',txt2:'编辑中'});
 
   // Sleep: confirmed status
@@ -1202,7 +1212,10 @@ function renderAnalysis() {
   // 3. Activity
   html += '<div class="analysis-dim"><div class="analysis-dim-title">🏃 活动</div>';
   html += renderAnalysisItem({ name:'户外活动', unit:'分钟', actual:outdoor, refMin:ref.outdoor.min, refMax:ref.outdoor.max }, 'min');
-  html += renderAnalysisItem({ name:'亲子游戏', unit:'项', actual:state.activity.games.length, refMin:2, refMax:5 }, 'min');
+  const gameCount = Object.keys(state.activity.games||{}).length;
+  const gameMin = Object.values(state.activity.games||{}).reduce((s,v)=>s+(v||0),0);
+  html += renderAnalysisItem({ name:'亲子游戏', unit:'项', actual:gameCount, refMin:2, refMax:5 }, 'min');
+  html += renderAnalysisItem({ name:'游戏总时长', unit:'分钟', actual:gameMin, refMin:15, refMax:60 }, 'min');
   html += '</div>';
 
   // 4. Water
@@ -1283,7 +1296,8 @@ function renderAlerts() {
   const outdoor = (state.activity.outdoor_am?state.activity.outdoor_am_min:0)+(state.activity.outdoor_pm?state.activity.outdoor_pm_min:0);
   if (outdoor===0) alerts.push({level:'danger',title:'无户外活动',desc:`建议每天至少 ${ref.outdoor.min} 分钟户外`});
   else if (outdoor<ref.outdoor.min) alerts.push({level:'warning',title:`户外仅 ${outdoor} 分钟`,desc:`参考 ${ref.outdoor.min}-${ref.outdoor.max} 分钟`});
-  if (state.activity.games.length<2) alerts.push({level:'info',title:'亲子互动偏少',desc:`仅 ${state.activity.games.length} 项游戏，建议 3 项以上`});
+  const gameCount = Object.keys(state.activity.games||{}).length;
+  if (gameCount<2) alerts.push({level:'info',title:'亲子互动偏少',desc:`仅 ${gameCount} 项游戏，建议 3 项以上`});
 
   const totalSleep = state.sleep.night+state.sleep.nap_am+state.sleep.nap_pm;
   if (totalSleep>0 && totalSleep<ref.sleep.total*0.85) alerts.push({level:'warning',title:`睡眠仅 ${totalSleep}h`,desc:`本年龄段需要约 ${ref.sleep.total} 小时睡眠`});
