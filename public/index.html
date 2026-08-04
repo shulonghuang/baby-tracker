@@ -232,6 +232,26 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .trend-bar.low{background:var(--amber)}
 .trend-avg{font-size:11px;color:var(--text2);min-width:52px;text-align:right}
 
+/* Bowel Movement */
+.bowel-records{margin-bottom:10px}
+.bowel-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--bg)}
+.bowel-row:last-child{border-bottom:none}
+.bowel-time{padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:var(--font);width:80px;text-align:center;background:#fff}
+.bowel-type-select{padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-family:var(--font);background:#fff;color:var(--text);min-width:80px;cursor:pointer}
+.bowel-type-select:focus,.bowel-time:focus{border-color:var(--green);outline:none}
+.bowel-type-tag{font-size:10px;padding:2px 8px;border-radius:8px;font-weight:600;white-space:nowrap}
+.bowel-type-tag.normal{background:var(--green-l);color:var(--green)}
+.bowel-type-tag.loose{background:#FFF0E0;color:#E65100}
+.bowel-type-tag.constipation{background:var(--amber-l);color:var(--amber)}
+.bowel-type-tag.unusual{background:var(--rose-l);color:var(--rose)}
+.bowel-note{font-size:11px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;width:100px;font-family:var(--font);background:var(--bg)}
+.bowel-note:focus{border-color:var(--amber);outline:none}
+.bowel-remove{width:24px;height:24px;border-radius:50%;border:none;background:transparent;color:var(--text3);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.bowel-remove:hover{color:var(--rose);background:var(--rose-l)}
+.bowel-add-btn{padding:6px 16px;border-radius:16px;border:1.5px dashed var(--border);background:transparent;color:var(--text2);font-size:12px;cursor:pointer;font-family:var(--font);margin-bottom:10px;transition:.2s}
+.bowel-add-btn:hover{border-color:var(--green);color:var(--green)}
+.bowel-summary{font-size:12px;color:var(--text2);margin:4px 0}
+
 /* Analysis - Comprehensive */
 .analysis-dim{margin-bottom:16px}
 .analysis-dim-title{font-size:14px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px;padding:8px 12px;background:var(--bg);border-radius:var(--radius-sm)}
@@ -387,6 +407,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
         <span class="section-toggle">▼</span>
       </div>
       <div class="section-body" id="suppsBody"></div>
+    </div>
+
+    <div class="section" id="secBowel">
+      <div class="section-header" onclick="toggleSection('secBowel')">
+        <div class="section-title">便便记录 <span class="section-chip none" id="chipBowel">未记录</span></div>
+        <span class="section-toggle">▼</span>
+      </div>
+      <div class="section-body" id="bowelBody"></div>
     </div>
 
     <!-- Measurement Section (at bottom of record tab) -->
@@ -662,7 +690,8 @@ function defaultData() {
     activity: { confirmed:false, outdoor_am:false, outdoor_am_min:30, outdoor_pm:false, outdoor_pm_min:30, walking:false, walking_min:15, games:{} },
     sleep: { confirmed:false, night:0, nap_am:0, nap_pm:0 },
     water: { confirmed:false, records:[] },
-    supplements: { confirmed:false, ad:false, dha:false }
+    supplements: { confirmed:false, ad:false, dha:false },
+    bowel: { confirmed:false, records:[] }
   };
 }
 
@@ -688,6 +717,7 @@ function loadData() {
         if (data.sleep && data.sleep.confirmed === undefined) data.sleep.confirmed = false;
         if (data.water && data.water.confirmed === undefined) data.water.confirmed = false;
         if (data.supplements && data.supplements.confirmed === undefined) data.supplements.confirmed = false;
+        if (data.bowel === undefined) data.bowel = { confirmed:false, records:[] };
         if (data.activity && Array.isArray(data.activity.games)) {
           const obj = {};
           data.activity.games.forEach(id => { obj[id] = 15; });
@@ -728,7 +758,8 @@ function syncToServer() {
     { name: 'activity', data: { confirmed: state.activity.confirmed === true, outdoor_am: state.activity.outdoor_am ? state.activity.outdoor_am_min : 0, outdoor_pm: state.activity.outdoor_pm ? state.activity.outdoor_pm_min : 0, walking: state.activity.walking ? state.activity.walking_min : 0, games: state.activity.games || {} } },
     { name: 'sleep', data: { confirmed: state.sleep.confirmed === true, night: state.sleep.night || 0, nap_am: state.sleep.nap_am || 0, nap_pm: state.sleep.nap_pm || 0 } },
     { name: 'water', data: { confirmed: state.water.confirmed === true, records: state.water.records || [] } },
-    { name: 'supplements', data: { confirmed: state.supplements.confirmed === true, ad: state.supplements.ad || false, dha: state.supplements.dha || false } }
+    { name: 'supplements', data: { confirmed: state.supplements.confirmed === true, ad: state.supplements.ad || false, dha: state.supplements.dha || false } },
+    { name: 'bowel', data: { confirmed: state.bowel.confirmed === true, records: (state.bowel.records || []).map(r => ({ time: r.time, type: r.type || 'normal', note: r.note || '' })) } }
   ];
   for (const sec of sections) {
     fetch(cfg.url + '/api/records', {
@@ -785,6 +816,10 @@ async function loadFromServer() {
       newState.supplements.confirmed = merged.supplements.confirmed === true;
       newState.supplements.ad = merged.supplements.ad || false;
       newState.supplements.dha = merged.supplements.dha || false;
+    }
+    if (merged.bowel) {
+      newState.bowel.confirmed = merged.bowel.confirmed === true;
+      newState.bowel.records = (merged.bowel.records || []).map(r => ({ time: r.time || '08:00', type: r.type || 'normal', note: r.note || '' }));
     }
     state = newState;
     let all = {};
@@ -1168,6 +1203,7 @@ function renderAll() {
   renderSleep();
   renderWater();
   renderSupps();
+  renderBowel();
   renderMeasurements();
   renderChips();
   updateSummary();
@@ -1505,6 +1541,96 @@ function toggleSuppPending(p) { state.supplements[p] = !state.supplements[p]; re
 function confirmSupps() { state.supplements.confirmed = true; saveData(state); }
 function unconfirmSupps() { state.supplements.confirmed = false; saveData(state); }
 
+// ========== BOWEL MOVEMENT (with confirm) ==========
+const BOWEL_TYPES = [
+  { id: 'normal', label: '正常', cls: 'normal' },
+  { id: 'loose', label: '拉稀', cls: 'loose' },
+  { id: 'constipation', label: '便秘', cls: 'constipation' },
+  { id: 'unusual', label: '异常', cls: 'unusual' }
+];
+
+function renderBowel() {
+  const bw = state.bowel;
+  const confirmed = bw.confirmed === true;
+  const records = bw.records || [];
+  let html = '<div class="science-card"><div class="science-title">参考标准</div><div class="science-text">1-3 岁幼儿每日排便 1-2 次为正常。如出现持续拉稀、便秘超过 3 天、或便色异常（白/黑/红），建议及时就医。</div></div>';
+
+  // List records
+  html += '<div class="bowel-records">';
+  for (let i = 0; i < records.length; i++) {
+    const r = records[i];
+    const typeInfo = BOWEL_TYPES.find(t => t.id === r.type) || BOWEL_TYPES[0];
+    const isAbnormal = r.type !== 'normal';
+    html += '<div class="bowel-row">';
+    html += '<input type="time" class="bowel-time" value="' + (r.time || '08:00') + '" onchange="updateBowelTime(' + i + ', this.value)" ' + (confirmed ? 'disabled' : '') + '>';
+    html += '<select class="bowel-type-select" onchange="updateBowelType(' + i + ', this.value)" ' + (confirmed ? 'disabled' : '') + '>';
+    for (const t of BOWEL_TYPES) {
+      html += '<option value="' + t.id + '"' + (r.type === t.id ? ' selected' : '') + '>' + t.label + '</option>';
+    }
+    html += '</select>';
+    html += '<span class="bowel-type-tag ' + typeInfo.cls + '">' + typeInfo.label + '</span>';
+    if (isAbnormal) {
+      html += '<input type="text" class="bowel-note" placeholder="备注..." value="' + (r.note || '') + '" onchange="updateBowelNote(' + i + ', this.value)" ' + (confirmed ? 'disabled' : '') + '>';
+    }
+    if (!confirmed) {
+      html += '<button class="bowel-remove" onclick="removeBowelRecord(' + i + ')" title="删除">×</button>';
+    }
+    html += '</div>';
+  }
+  html += '</div>';
+
+  // Add button
+  if (!confirmed) {
+    html += '<button class="bowel-add-btn" onclick="addBowelRecord()">+ 添加记录</button>';
+  }
+
+  // Summary
+  if (records.length > 0) {
+    const times = records.map(r => r.time).join('、');
+    const normalCount = records.filter(r => r.type === 'normal').length;
+    const abnormalCount = records.filter(r => r.type !== 'normal').length;
+    let summary = '今日 ' + records.length + ' 次（' + times + '）';
+    if (normalCount > 0) summary += ' · ' + normalCount + '次正常';
+    if (abnormalCount > 0) {
+      const labels = records.filter(r => r.type !== 'normal').map(r => {
+        const t = BOWEL_TYPES.find(bt => bt.id === r.type);
+        return (t ? t.label : '异常') + (r.note ? '(' + r.note + ')' : '');
+      }).join('、');
+      summary += ' · ⚠ ' + labels;
+    }
+    html += '<div class="bowel-summary">' + summary + '</div>';
+  }
+
+  // Confirm
+  if (confirmed) {
+    html += '<div class="confirm-row"><span class="confirm-done">已打卡</span><button class="confirm-edit-btn" onclick="unconfirmBowel()">修改</button></div>';
+  } else {
+    html += '<div class="confirm-row"><button class="confirm-btn"' + (records.length > 0 ? '' : ' disabled') + ' onclick="confirmBowel()">确认打卡</button></div>';
+    if (records.length === 0) html += '<div class="confirm-hint">请先添加便便记录，然后确认打卡</div>';
+  }
+
+  document.getElementById('bowelBody').innerHTML = html;
+}
+
+function addBowelRecord() {
+  if (!state.bowel.records) state.bowel.records = [];
+  state.bowel.records.push({ time: '', type: 'normal', note: '' });
+  renderBowel(); updateChipsOnly();
+}
+function removeBowelRecord(idx) {
+  state.bowel.records.splice(idx, 1);
+  renderBowel(); updateChipsOnly();
+}
+function updateBowelTime(idx, val) { state.bowel.records[idx].time = val; }
+function updateBowelType(idx, val) {
+  state.bowel.records[idx].type = val;
+  state.bowel.records[idx].note = '';
+  renderBowel(); updateChipsOnly();
+}
+function updateBowelNote(idx, val) { state.bowel.records[idx].note = val; }
+function confirmBowel() { state.bowel.confirmed = true; saveData(state); renderBowel(); updateChipsOnly(); }
+function unconfirmBowel() { state.bowel.confirmed = false; saveData(state); renderBowel(); updateChipsOnly(); }
+
 // ========== SUMMARY & CHIPS ==========
 function updateSummary() {
   let meals=0;
@@ -1556,6 +1682,9 @@ function renderChips() {
   const supConfirmed = state.supplements.confirmed === true;
   const hasSupps = state.supplements.ad || state.supplements.dha;
   chip('Supps',{done:supConfirmed,partial:hasSupps,txt:'已打卡',txt2:'编辑中'});
+  const bwConfirmed = state.bowel.confirmed === true;
+  const hasBowel = (state.bowel.records || []).length > 0;
+  chip('Bowel',{done:bwConfirmed,partial:hasBowel,txt:'已打卡',txt2:'编辑中'});
 
   // Measurement chip
   const profile = getBabyProfile();
@@ -1590,7 +1719,7 @@ function getAllHistory(days = 7) {
 
 // Compute section completion for a given day's data
 function getSectionDone(data) {
-  if (!data) return { feeding: 0, activity: 0, sleep: 0, water: 0, supplements: 0 };
+  if (!data) return { feeding: 0, activity: 0, sleep: 0, water: 0, supplements: 0, bowel: 0 };
   // feeding: count completed meals / total meals
   let mealDone = 0;
   if (data.feeding) {
@@ -1632,7 +1761,13 @@ function getSectionDone(data) {
   if (sup.confirmed === true) supPct = 100;
   else if (sup.ad || sup.dha) supPct = 50;
 
-  return { feeding: mealDone, activity: actPct, sleep: slPct, water: wtPct, supplements: supPct };
+  // bowel
+  const bw = data.bowel || {};
+  let bwPct = 0;
+  if (bw.confirmed === true) bwPct = 100;
+  else if ((bw.records || []).length > 0) bwPct = 50;
+
+  return { feeding: mealDone, activity: actPct, sleep: slPct, water: wtPct, supplements: supPct, bowel: bwPct };
 }
 
 function getTodayCompletion(sections) {
@@ -1705,7 +1840,8 @@ function renderAnalysis() {
     { key: 'activity', label: '活动' },
     { key: 'sleep', label: '睡眠' },
     { key: 'water', label: '饮水' },
-    { key: 'supplements', label: '补充剂' }
+    { key: 'supplements', label: '补充剂' },
+    { key: 'bowel', label: '便便' }
   ];
   html += '<div class="donut-section">';
   html += renderDonut(todayPct);
@@ -1721,7 +1857,7 @@ function renderAnalysis() {
   // ===== 7-DAY COMPLETION GRID =====
   const history = getAllHistory(7);
   html += '<div class="day-grid">';
-  const dotKeys = ['feeding', 'activity', 'sleep', 'water', 'supplements'];
+  const dotKeys = ['feeding', 'activity', 'sleep', 'water', 'supplements', 'bowel'];
   for (let i = 0; i < history.length; i++) {
     const h = history[i];
     const isToday = h.date === TODAY;
@@ -1850,6 +1986,35 @@ function renderAnalysis() {
   html += renderAnalysisItem({ name:'DHA', unit:'', actual:state.supplements.dha?1:0, refMin:0.5, refMax:1 }, 'count');
   html += '</div>';
 
+  // 5b. Bowel Movement
+  html += '<div class="analysis-dim"><div class="analysis-dim-title">便便记录</div>';
+  const bwRecords = state.bowel.records || [];
+  if (bwRecords.length > 0) {
+    const bwByType = {};
+    for (const r of bwRecords) {
+      const t = r.type || 'normal';
+      bwByType[t] = (bwByType[t] || 0) + 1;
+    }
+    const bwNormal = bwByType.normal || 0;
+    const bwAbnormal = bwRecords.length - bwNormal;
+    html += '<div class="analysis-detail" style="font-size:13px;color:var(--text);padding:4px 0">今日排便 <b>' + bwRecords.length + '</b> 次';
+    if (bwNormal > 0) html += '（正常 ' + bwNormal + ' 次）';
+    if (bwAbnormal > 0) html += '，<span style="color:var(--rose)">异常 ' + bwAbnormal + ' 次</span>';
+    html += '</div>';
+    const times = bwRecords.map(r => r.time).join(' / ');
+    html += '<div class="analysis-detail">时间：' + times + '</div>';
+    const abnormalItems = bwRecords.filter(r => r.type !== 'normal');
+    if (abnormalItems.length > 0) {
+      for (const a of abnormalItems) {
+        const tInfo = BOWEL_TYPES.find(bt => bt.id === a.type);
+        html += '<div class="analysis-detail" style="color:var(--rose)">⚠ ' + a.time + ' ' + (tInfo ? tInfo.label : '异常') + (a.note ? '：' + a.note : '') + '</div>';
+      }
+    }
+  } else {
+    html += '<div class="analysis-detail" style="color:var(--text2)">今日未记录便便情况</div>';
+  }
+  html += '</div>';
+
   // 6. Milestones
   html += '<div class="analysis-dim"><div class="analysis-dim-title">发育里程碑 <span style="font-size:11px;font-weight:400;color:var(--text2)">参考对照</span></div>';
   for (const mile of (ref.milestones||[])) {
@@ -1922,6 +2087,20 @@ function renderAlerts() {
 
   if (!state.supplements.ad) alerts.push({level:'danger',title:'未补充维生素AD',desc:'每天必须补充 AD 滴剂'});
   if (!state.supplements.dha) alerts.push({level:'info',title:'未补充 DHA',desc:'可每周 2-3 次补充'});
+
+  // Bowel alerts
+  const bwRecords = state.bowel.records || [];
+  const hasAbnormal = bwRecords.some(r => r.type !== 'normal' && r.type);
+  if (bwRecords.length === 0) {
+    alerts.push({level:'info',title:'今日未记录便便',desc:'建议记录每日排便情况'});
+  } else if (hasAbnormal) {
+    const abnormal = bwRecords.filter(r => r.type !== 'normal');
+    const labels = abnormal.map(r => {
+      const t = BOWEL_TYPES.find(bt => bt.id === r.type);
+      return (t ? t.label : '异常') + (r.note ? '(' + r.note + ')' : '');
+    }).join('、');
+    alerts.push({level:'warning',title:'便便异常',desc: '检测到异常排便：' + labels + '，持续异常建议就医'});
+  }
 
   // Growth alerts (NEW)
   const profile = getBabyProfile();
